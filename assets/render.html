@@ -1,0 +1,16 @@
+<html>
+	<head>
+		<title>EJS caching template</title>
+		<script type='text/javascript' src='ejs.js'></script>
+	</head>
+	<body>
+	hi hi
+		<script type='text/javascript'>
+			console.log("hello world");
+			var data = { foo: "1" };
+			var html = new EJS({url: 'test.ejs'}).render(data);
+			document.writeln(html);
+			console.log(html);
+		</script>
+	</body>
+</html>

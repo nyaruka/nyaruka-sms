@@ -8,6 +8,14 @@ import android.content.res.AssetManager;
 
 import com.nyaruka.http.HttpServer;
 
+/**
+ * Android version of our HTTP server. 
+ * 
+ * Android serves its static files using Android's AssetManager.
+ * 
+ * @author nicp
+ *
+ */
 public class AndroidHttpServer extends HttpServer {
 
 	public AndroidHttpServer(int port, Context context) throws IOException {
@@ -15,10 +23,13 @@ public class AndroidHttpServer extends HttpServer {
 		m_assets = context.getAssets();		
 	}
 	
-	@Override
+	/**
+	 * Grab our files from the asset manager instead of the file system.
+	 */
 	public InputStream getInputStream(String path) throws IOException {
 		return m_assets.open(path);
 	}
 	
+	/** Our applications asset manager */
 	private AssetManager m_assets;
 }

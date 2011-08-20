@@ -1,12 +1,22 @@
 package com.nyaruka.http;
 
 import java.io.File;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Properties;
+import java.util.Scanner;
 
-import android.content.res.AssetManager;
+import org.json.JSONObject;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.ScriptableObject;
 
+/**
+ * Root HTTP class, where the magic happens.
+ * 
+ * @author nicp
+ */
 public abstract class HttpServer extends NanoHTTPD {
 	
 	public HttpServer(int port) throws IOException{
@@ -14,10 +24,94 @@ public abstract class HttpServer extends NanoHTTPD {
 	}
 
 	public Response serve( String uri, String method, Properties header, Properties parms, Properties files ){
-		if (!uri.equals("/")){
-			return serveFile(uri, header);
+		if (uri.equals("/")){
+			return serveEditor(uri, method, header, parms, files);
+		}
+		else if (uri.indexOf('.') > -1){
+			return serveFile(uri, header);			
+		}
+		else {
+			return servePage(uri, method, header, parms, files);
+		}
+	}
+
+	/**
+	 * Responsible for rendering a page in our framework style.
+	 * 
+	 * Process is essentially:
+	 *    - take path, append '.js' .. if that file is found, then that is the 'view' which is executed to create
+	 *      a JSON blob of data.  If not found, an empty blob of JSON data is used instead.
+	 *    - take path, append '.ejs' .. this is rendered as EJS using the data supplied by the JSON.  If this file 
+	 *      isn't found, then return a 404
+	 */
+	public Response servePage(String uri, String method, Properties header, Properties parms, Properties files){
+		// first make sure our template exists, otherwise it's a 404
+		try{
+			InputStream is = getInputStream(uri + ".ejs");
+			is.close();
+		} catch (Throwable t){
+			return new Response(HTTP_NOTFOUND, MIME_PLAINTEXT, "Error 404, file not found.");						
 		}
 		
+		// evaluate our view (if not found, this will return an empty dict)
+		JSONObject response = evaluateView(uri, method, header, parms, files);
+
+		String html = "<html>";
+		html += "<head><script type='text/javascript' src='/js/ejs.js'></script></head>";
+		html += "<body><script type='text/javascript'>";
+		html += "var data = " + response.toString() + ";";
+		html += "var html = new EJS({url:'" + uri + ".ejs'}).render(data);";
+		html += "document.writeln(html);";
+		html += "</script>";
+		html += "</body>";
+		
+		return new NanoHTTPD.Response( HTTP_OK, MIME_HTML, html);			
+	}
+	
+	public JSONObject evaluateView(String uri, String method, Properties headers, Properties params, Properties files){
+		// first see if we can find the view
+		String script = null;
+		try{
+			InputStream is = getInputStream(uri + ".js");
+			script = new Scanner(is).useDelimiter("\\A").next();
+		} catch (Throwable t){
+			// not found, that's ok
+		}
+		
+		// our view renders into a map
+		JSONObject response = new JSONObject(); 
+		
+		if (script != null){
+			// Create our context and turn off compilation
+			Context cx = Context.enter();
+			cx.setOptimizationLevel(-1);
+			
+			// build our request object
+			HashMap request = new HashMap();
+			request.put("method", method);
+			request.put("uri", uri);
+			request.put("headers", headers);
+			request.put("params", params);
+			request.put("files", files);
+
+			// Initialize the scope
+			ScriptableObject scope = cx.initStandardObjects();
+			ScriptableObject.putProperty(scope, "response", response);
+			ScriptableObject.putProperty(scope, "request", request);
+
+			Object result;
+			try{
+				result = cx.evaluateString(scope, script, "", 1, null);
+			} catch (Throwable t){
+				t.printStackTrace();
+			}
+			Context.exit();
+		}
+		
+		return response;
+	}
+		
+	public Response serveEditor(String uri, String method, Properties header, Properties parms, Properties files){
 		System.out.println( method + " '" + uri + "' " );
 		String msg = "<html><body><h1>Code</h1>\n";
 		
@@ -39,17 +133,7 @@ public abstract class HttpServer extends NanoHTTPD {
 		msg += "</body></html>\n";
 		return new NanoHTTPD.Response( HTTP_OK, MIME_HTML, msg );
 	}
-
-	public Object executeJS(String script){
-		String address = "250788383383";
-		String message = "hello world";
-		
-		HttpService.getThis().setScript(script);
-		return HttpService.getThis().executeJS(script, address, message);
-	}
-
-	public abstract InputStream getInputStream(String path) throws IOException;
-		
+	
 	/**
 	 * Serves file from homeDir and its' subdirectories (only).
 	 * Uses only URI, ignores all headers and HTTP parameters.
@@ -79,7 +163,7 @@ public abstract class HttpServer extends NanoHTTPD {
 			is = getInputStream(uri);
 		} catch (Throwable t){
 			t.printStackTrace();
-			return res = new Response(HTTP_NOTFOUND, MIME_PLAINTEXT, "Error 404, file not found.");			
+			return new Response(HTTP_NOTFOUND, MIME_PLAINTEXT, "Error 404, file not found.");
 		}
 		
 		try {
@@ -95,7 +179,7 @@ public abstract class HttpServer extends NanoHTTPD {
 				}
 
 				// Calculate etag
-				String etag = Integer.toHexString(uri.hashCode());
+				String etag = Integer.toHexString(uri.hashCode() + is.available());
 
 				// Support (simple) skipping:
 				long startFrom = 0;
@@ -122,7 +206,7 @@ public abstract class HttpServer extends NanoHTTPD {
 					if (startFrom >= fileLen) {
 						res = new Response(HTTP_RANGE_NOT_SATISFIABLE, MIME_PLAINTEXT, "");
 						res.addHeader("Content-Range", "bytes 0-0/" + fileLen);
-						res.addHeader("ETag", etag);
+						//res.addHeader("ETag", etag);
 					} else {
 						if (endAt < 0){
 							endAt = fileLen - 1;
@@ -147,15 +231,20 @@ public abstract class HttpServer extends NanoHTTPD {
 				}
 			}
 		} catch (IOException ioe) {
-			res = new Response(HTTP_FORBIDDEN, MIME_PLAINTEXT,
-					"FORBIDDEN: Reading file failed.");
+			res = new Response(HTTP_FORBIDDEN, MIME_PLAINTEXT, "FORBIDDEN: Reading file failed.");
 		}
 
-		res.addHeader("Accept-Ranges", "bytes"); // Announce that the file
-													// server accepts partial
-													// content requestes
+		res.addHeader("Accept-Ranges", "bytes"); // Announce that the file server accepts partial content requests
 		return res;
 	}
+	
+		public Object executeJS(String script){
+		String address = "250788383383";
+		String message = "hello world";
+		
+		HttpService.getThis().setScript(script);
+		return HttpService.getThis().executeJS(script, address, message);
+	}
 
-	private AssetManager m_assets;
+	public abstract InputStream getInputStream(String path) throws IOException;
 }

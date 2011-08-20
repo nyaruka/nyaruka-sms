@@ -73,6 +73,7 @@ public class HttpService extends Service implements SMSModem.SmsModemListener {
         } catch (Throwable t){
         	return t.toString();
         }
+        Context.exit();
         
         return result;
     }

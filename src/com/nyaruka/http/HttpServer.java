@@ -2,14 +2,17 @@ package com.nyaruka.http;
 
 import java.io.File;
 
+import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.Scanner;
 
 import org.json.JSONObject;
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
 /**
@@ -45,6 +48,8 @@ public abstract class HttpServer extends NanoHTTPD {
 	 *      isn't found, then return a 404
 	 */
 	public Response servePage(String uri, String method, Properties header, Properties parms, Properties files){
+		StringBuffer log = new StringBuffer();
+		
 		// first make sure our template exists, otherwise it's a 404
 		try{
 			InputStream is = getInputStream(uri + ".ejs");
@@ -54,21 +59,38 @@ public abstract class HttpServer extends NanoHTTPD {
 		}
 		
 		// evaluate our view (if not found, this will return an empty dict)
-		JSONObject response = evaluateView(uri, method, header, parms, files);
+		JSONObject response = evaluateView(log, uri, method, header, parms, files);
 
 		String html = "<html>";
-		html += "<head><script type='text/javascript' src='/js/ejs.js'></script></head>";
+		html += "<head>";
+		html += "<link rel='stylesheet' type='text/css' href='/css/style.css' />";
+		html += "<script type='text/javascript' src='/js/ejs.js'></script></head>";
 		html += "<body><script type='text/javascript'>";
 		html += "var data = " + response.toString() + ";";
 		html += "var html = new EJS({url:'" + uri + ".ejs'}).render(data);";
 		html += "document.writeln(html);";
 		html += "</script>";
+		html += "<div id='log'>";
+		html += log.toString();
+		html += "</html>";
 		html += "</body>";
 		
 		return new NanoHTTPD.Response( HTTP_OK, MIME_HTML, html);			
 	}
 	
-	public JSONObject evaluateView(String uri, String method, Properties headers, Properties params, Properties files){
+	public static class Logger {
+		public Logger(StringBuffer log){
+			m_log = log;
+		}
+		
+		public void log(String msg){
+			m_log.append(msg + "\n");
+		}
+		
+		StringBuffer m_log;
+	}
+	
+	public JSONObject evaluateView(final StringBuffer log, String uri, String method, Properties headers, Properties params, Properties files){
 		// first see if we can find the view
 		String script = null;
 		try{
@@ -76,6 +98,7 @@ public abstract class HttpServer extends NanoHTTPD {
 			script = new Scanner(is).useDelimiter("\\A").next();
 		} catch (Throwable t){
 			// not found, that's ok
+			log.append("No view found for '" + uri + "'\n");
 		}
 		
 		// our view renders into a map
@@ -85,7 +108,7 @@ public abstract class HttpServer extends NanoHTTPD {
 			// Create our context and turn off compilation
 			Context cx = Context.enter();
 			cx.setOptimizationLevel(-1);
-			
+
 			// build our request object
 			HashMap request = new HashMap();
 			request.put("method", method);
@@ -98,16 +121,19 @@ public abstract class HttpServer extends NanoHTTPD {
 			ScriptableObject scope = cx.initStandardObjects();
 			ScriptableObject.putProperty(scope, "response", response);
 			ScriptableObject.putProperty(scope, "request", request);
+			ScriptableObject.putProperty(scope, "console", new Logger(log));			
 
 			Object result;
 			try{
 				result = cx.evaluateString(scope, script, "", 1, null);
 			} catch (Throwable t){
-				t.printStackTrace();
+				CharArrayWriter stack = new CharArrayWriter();
+				t.printStackTrace(new PrintWriter(stack));
+				log.append(stack.toCharArray());
 			}
 			Context.exit();
 		}
-		
+
 		return response;
 	}
 		

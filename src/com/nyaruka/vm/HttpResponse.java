@@ -11,6 +11,14 @@ public class HttpResponse {
 
 	public HttpResponse(){
 	}
+
+	public void set(String key, boolean value){
+		try{
+			m_data.put(key, value);
+		} catch (Exception e){
+			throw new RuntimeException(e);
+		}
+	}
 	
 	public void set(String key, String value){
 		try{
@@ -28,7 +36,7 @@ public class HttpResponse {
 		}
 	}
 	
-	public void set(String key, boolean value){
+	public void set(String key, long value){
 		try{
 			m_data.put(key, value);
 		} catch (Exception e){

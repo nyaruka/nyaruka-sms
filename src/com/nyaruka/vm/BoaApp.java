@@ -38,8 +38,11 @@ public class BoaApp {
 		// clear our current router
 		m_router.reset();
 		
+		LoggingWrapper logWrapper = new LoggingWrapper(log);
+		
 		// and put it in the scope
 		ScriptableObject.putProperty(m_scope, "router", m_router);
+		ScriptableObject.putProperty(m_scope, "console", logWrapper);
 		
 		Object result;
 		try{
@@ -82,6 +85,9 @@ public class BoaApp {
 		}
 
 		HttpResponse response = new HttpResponse();
+		
+		LoggingWrapper logWrapper = new LoggingWrapper(log);
+		ScriptableObject.putProperty(m_scope, "console", logWrapper);		
 		
 		Object args[] = { request, response };
 		try{

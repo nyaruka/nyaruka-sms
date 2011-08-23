@@ -264,12 +264,13 @@ public abstract class HttpServer extends NanoHTTPD {
 		return res;
 	}
 	
-		public Object executeJS(String script){
-		String address = "250788383383";
+	public Object executeJS(String script){
+		/*String address = "250788383383";
 		String message = "hello world";
 		
 		HttpService.getThis().setScript(script);
-		return HttpService.getThis().executeJS(script, address, message);
+		return HttpService.getThis().executeJS(script, address, message);*/
+		return "";
 	}
 
 	public abstract InputStream getInputStream(String path) throws IOException;

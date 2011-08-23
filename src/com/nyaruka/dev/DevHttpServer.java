@@ -33,6 +33,7 @@ public class DevHttpServer extends HttpServer {
 	public static void main(String argv[]){
 		String directory = argv[0];
 		
+		System.out.println("Starting server for " + directory);
 		int port = 8000;
 		if (argv.length == 2){
 			port = Integer.parseInt(argv[1]);

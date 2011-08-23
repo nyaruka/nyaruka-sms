@@ -42,6 +42,32 @@ public class BoaAppTest extends TestCase {
 		assertNull(app.handleHttpRequest(request, log));
 	}
 	
+	public void testReload(){
+		StringBuffer log = new StringBuffer();
+		BoaApp app = new BoaApp("test");
+		String main =
+			"function hello(req, resp){ " +
+			"  console.log(\"original\");" +
+			"};  " + 
+			"router.addHttpHandler('hello', hello);";
+		app.load(main, log);
+		
+		HttpRequest request = new HttpRequest("hello", "GET", new Properties());
+		HttpResponse response = app.handleHttpRequest(request, log);
+		assertEquals("original", log.toString());
+		
+		log.setLength(0);
+		main =
+			"function hello(req, resp){ " +
+			"  console.log(\"reloaded\");" +
+			"};  " + 
+			"router.addHttpHandler('hello', hello);";
+		app.load(main, log);
+		
+		response = app.handleHttpRequest(request, log);
+		assertEquals("reloaded", log.toString());
+	}
+	
 	public void testBasic(){
 		StringBuffer log = new StringBuffer();
 		String basic =
@@ -114,5 +140,4 @@ public class BoaAppTest extends TestCase {
 		assertNotNull(response);
 		assertEquals("{\"test\":8}", response.getData().toString());
 	}
-	
 }

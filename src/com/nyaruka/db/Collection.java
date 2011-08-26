@@ -1,14 +1,25 @@
 package com.nyaruka.db;
 
-public class RecordType {
+import org.json.JSONObject;
+
+public class Collection {
 
 	public static final int INDEX_COLS = 5;
 	
-	public RecordType(int id, String name){
+	public Collection(DB db, int id, String name){
+		m_db = db;
 		m_id = id;
 		m_name = name;
 	}
-
+	
+	public Record addRecord(JSONObject data) {
+		return m_db.insertRecord(this, data);
+	}
+	
+	public Record getRecord(long id){
+		return m_db.getRecord(this, id);
+	}
+	
 	public int getId(){ return m_id; }
 
 	public String getIntIndex(int index){
@@ -91,6 +102,7 @@ public class RecordType {
 		m_strs[index] = name;
 	}
 	
+	private DB m_db;
 	private int m_id;
 	private String m_name;
 	private String[] m_ints = new String[INDEX_COLS];

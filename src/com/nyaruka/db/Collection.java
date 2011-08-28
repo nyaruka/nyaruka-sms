@@ -2,6 +2,8 @@ package com.nyaruka.db;
 
 import org.json.JSONObject;
 
+import com.nyaruka.json.JSON;
+
 public class Collection {
 
 	public static final int INDEX_COLS = 5;
@@ -12,8 +14,35 @@ public class Collection {
 		m_name = name;
 	}
 	
-	public Record addRecord(JSONObject data) {
-		return m_db.insertRecord(this, data);
+	public Record save(JSON data) {
+		return m_db.save(this, data);
+	}
+	
+	public Record save(JSONObject data){
+		return save(new JSON(data));
+	}
+	
+	public Record save(String data){
+		try{
+			System.out.println(data);
+			JSON json = new JSON(data);
+			return save(json);
+		} catch (Throwable t){
+			throw new RuntimeException(t);
+		}
+	}
+	
+	public Cursor find(JSON query) {
+		return m_db.findRecords(this, query);
+	}
+	
+	public Cursor find(String query) {
+		try{
+			JSON json = new JSON(query);
+			return find(json);
+		} catch (Throwable t){
+			throw new RuntimeException(t);
+		}
 	}
 	
 	public Record getRecord(long id){
@@ -64,12 +93,18 @@ public class Collection {
 		return false;
 	}
 	
+	/**
+	 * Ensures that an index is present within the passed in array
+	 * @param map The array of index names
+	 * @param name The name of the index to search for
+	 * @return Whether we had to add the index ourselves (false if it existed)
+	 */
 	private boolean ensureIndex(String[] map, String name){
 		int empty = -1;
 		for(int i=0; i<INDEX_COLS; i++){
 			if (map[i] != null){
 				if (map[i].equals(name)){
-					return true;
+					return false;
 				}
 			} else if (empty == -1){
 				empty = i;
@@ -78,7 +113,7 @@ public class Collection {
 		
 		// no empty slot?  no can do
 		if (empty == -1){
-			return false;
+			throw new RuntimeException("No room remaining for a new index");
 		}
 		
 		// otherwise, add it
@@ -86,12 +121,18 @@ public class Collection {
 		return true;
 	}
 	
-	public boolean ensureStrIndex(String name){
-		return ensureIndex(m_strs, name);
+	public void ensureStrIndex(String name){
+		if (ensureIndex(m_strs, name)){
+			m_db.saveCollection(this);
+			m_db.populateIndex(this, name);
+		}
 	}
 	
-	public boolean ensureIntIndex(String name){
-		return ensureIndex(m_ints, name);
+	public void ensureIntIndex(String name){
+		if (ensureIndex(m_ints, name)){
+			m_db.saveCollection(this);
+			m_db.populateIndex(this, name);
+		}
 	}
 	
 	public void setIntIndex(int index, String name){
@@ -102,6 +143,24 @@ public class Collection {
 		m_strs[index] = name;
 	}
 	
+	public String getIndexName(String name){
+		String field = null;
+		int index = getIntIndex(name);
+		if (index >= 0){
+			field = "int" + index;
+		} else{
+			index = getStrIndex(name);
+			if (index >= 0){
+				field = "str" + index;
+			}
+		}
+		return field;
+	}
+	
+	public void delete(long id) {
+		m_db.deleteRecord(this, id);
+	}
+		
 	private DB m_db;
 	private int m_id;
 	private String m_name;

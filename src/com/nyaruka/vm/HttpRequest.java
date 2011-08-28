@@ -23,6 +23,10 @@ public class HttpRequest {
 		return m_method;
 	}
 	
+	public Properties params(){
+		return m_params;
+	}
+	
 	private String m_url;
 	private String m_method;
 	private Properties m_params;

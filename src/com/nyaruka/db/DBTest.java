@@ -1,6 +1,8 @@
 package com.nyaruka.db;
 
-import org.json.JSONObject;
+import java.util.ArrayList;
+
+import com.nyaruka.json.JSON;
 
 import junit.framework.TestCase;
 
@@ -93,7 +95,7 @@ public class DBTest extends TestCase {
 		
 		Collection col = db.ensureCollection("test");
 		
-		JSONObject simple = new JSONObject();
+		JSON simple = new JSON();
 		simple.put("string", "mystring");
 		simple.put("int", 10);
 		simple.put("long", 10000000000l);
@@ -101,7 +103,7 @@ public class DBTest extends TestCase {
 		simple.put("boolean", false);
 		
 		// add the record to our collection
-		Record rec = col.addRecord(simple);
+		Record rec = col.save(simple);
 		
 		assertNotNull(rec);
 		assertEquals(1, rec.getId());
@@ -110,11 +112,100 @@ public class DBTest extends TestCase {
 		rec = col.getRecord(rec.getId());
 		
 		// make sure what we got it is the same as we put in
-		JSONObject data = rec.getData();
+		JSON data = rec.getData();
 		assertEquals("mystring", data.getString("string"));
 		assertEquals(10, data.getInt("int"));
 		assertEquals(10000000000l, data.getLong("long"));
 		assertEquals(1.234d, data.getDouble("double"));
 		assertEquals(false, data.getBoolean("boolean"));
+		
+		// not there
+		assertNull(col.getRecord(100));
+	}
+	
+	public void testGenerateSQL() throws Exception {
+		ArrayList<String> params = new ArrayList<String>();
+		
+		String sql = DB.buildClause("age", new JSON("{ $gt: 10 }"), params);
+		assertEquals("age > ?", sql);
+		assertEquals(1, params.size());
+		assertEquals("10", params.get(0));
+		
+		params.clear();
+		
+		sql = DB.buildClause("age", new JSON("{ $gt: 10, $lt: 30 }"), params);
+		assertEquals("age > ? AND age < ?", sql);
+		assertEquals(2, params.size());
+		assertEquals("10", params.get(0));		
+		assertEquals("30", params.get(1));				
+	}
+	
+	public void testFiltering() throws Exception {
+		DB db = new DB();
+		db.open();
+		db.init();
+		
+		Collection col = db.ensureCollection("contacts");
+		col.ensureIntIndex("age");
+		
+		Record eric = col.save("{ name: 'Eric Newcomer', age: 32 }");
+		Record nic = col.save("{ name: 'Nic Pottier', age: 34 }");		
+		Record stevo = col.save("{ name: 'Steve Jobs', age: 55 }");
+		
+		// query for everybody over 50
+		Cursor cursor = col.find("{ age: 55 }");
+		
+		assertEquals(1, cursor.count());
+		assertTrue(cursor.hasNext());
+		assertTrue(cursor.hasNext());		
+		Record match = cursor.next(); 
+		assertEquals(stevo.getId(), match.getId());
+		assertFalse(cursor.hasNext());
+		assertFalse(cursor.hasNext());
+
+		// update a record, stevo is actually 58
+		long oldId = stevo.getId();
+		stevo.setData("{name: 'Steve Jobs', age: 58 }");
+		col.save(stevo.toString());
+		
+		// query for him
+		cursor = col.find("{ age: 58 }");
+		match = cursor.next();
+		assertEquals(oldId, match.getId());
+		
+		// test that indexes are actually being persisted in the DB
+		col.ensureStrIndex("name");
+		db.load();
+		col = db.ensureCollection("contacts");
+		
+		cursor = col.find("{name: 'Eric Newcomer'}");
+		
+		assertEquals(1, cursor.count());
+		assertTrue(cursor.hasNext());
+		match = cursor.next();
+		assertEquals(eric.getId(), match.getId());
+		assertFalse(cursor.hasNext());
+		
+		cursor = col.find("{age: { $gt: 40 } }");
+		assertEquals(1, cursor.count());
+		assertEquals(stevo.getId(), cursor.next().getId());
+		
+		cursor = col.find("{age: { $gt: 30, $lt: 50 } }");
+		assertEquals(2, cursor.count());
+		assertEquals(eric.getId(), cursor.next().getId());				
+		assertEquals(nic.getId(), cursor.next().getId());
+		assertFalse(cursor.hasNext());
+		
+		cursor = col.find("{age: 100 }");
+		assertEquals(0, cursor.count());
+		assertFalse(cursor.hasNext());
+		
+		// remove a record
+		col.delete(stevo.getId());
+		
+		cursor = col.find("{}");
+		assertEquals(2, cursor.count());
+		assertEquals(eric.getId(), cursor.next().getId());				
+		assertEquals(nic.getId(), cursor.next().getId());		
 	}
 }

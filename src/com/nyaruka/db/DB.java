@@ -170,6 +170,14 @@ public class DB {
 		return m_collections.get(name);
 	}
 	
+	public ArrayList<String> getCollectionNames(){
+		ArrayList<String> names = new ArrayList<String>();
+		for (Collection coll : m_collections.values()){
+			names.add(coll.getName());
+		}
+		return names;
+	}
+	
 	public static String generateSQL(Collection coll, JSON query, ArrayList<String> params){
 		String whereClause = "";
 		String delim = "";

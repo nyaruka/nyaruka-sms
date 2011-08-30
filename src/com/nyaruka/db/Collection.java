@@ -160,6 +160,8 @@ public class Collection {
 	public void delete(long id) {
 		m_db.deleteRecord(this, id);
 	}
+	
+	public String getName(){ return m_name; }
 		
 	private DB m_db;
 	private int m_id;

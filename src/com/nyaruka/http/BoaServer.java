@@ -5,12 +5,24 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import net.asfun.jangod.template.TemplateEngine;
 
+import com.nyaruka.db.Collection;
+import com.nyaruka.db.Cursor;
+import com.nyaruka.db.Record;
+import com.nyaruka.json.JSON;
 import com.nyaruka.util.FileUtil;
 import com.nyaruka.vm.BoaApp;
 import com.nyaruka.vm.HttpRequest;
@@ -45,6 +57,9 @@ public abstract class BoaServer extends NanoHTTPD {
 			
 			if (url.indexOf('.') > -1){
 				return serveFile(url, header);			
+			}
+			else if (url.startsWith("/db")){
+				return renderDB(url, method);
 			}
 			else if (url.equals("/edit")) {
 				if (!params.containsKey("filename")) {
@@ -98,6 +113,60 @@ public abstract class BoaServer extends NanoHTTPD {
 		}
 	}
 	
+	public Response renderDB(String url, String method){
+		Pattern COLL = Pattern.compile("^/db/(.*)/$");
+		Matcher matcher = null;
+		
+		if (url.equals("/db")){
+			HashMap<String, Object> context = new HashMap<String, Object>();
+			context.put("collections", m_vm.getDB().getCollectionNames());
+			return renderTemplate("db/index.html", context);
+		} 
+		
+		matcher = COLL.matcher(url);
+		if (matcher.find()){
+			String collName = matcher.group(1);
+			Collection coll = m_vm.getDB().ensureCollection(collName);
+			
+			// our set of keys
+			HashSet<String> keys = new HashSet<String>();
+			
+			// build our list of matches
+			ArrayList records = new ArrayList();
+			Cursor cursor = coll.find("{}");
+			while (cursor.hasNext()){
+				Record record = cursor.next();
+				JSON data = record.getData();
+				
+				// add all our unique keys
+				Iterator item_keys = data.keys();
+				while(item_keys.hasNext()){
+					String key = item_keys.next().toString();
+					
+					// get the value
+					Object value = data.get(key);
+					
+					// skip this key if the value is complex
+					if ((value instanceof JSON) || (value instanceof JSONObject) || (value instanceof JSONArray)){
+						// pass
+					} else {
+						keys.add(key);
+					}
+				}
+				
+				records.add(record.toJSON().toMap());
+			}
+			
+			HashMap<String, Object> context = new HashMap<String, Object>();
+			context.put("keys", keys);
+			context.put("collection", coll);
+			context.put("records", records);
+			return renderTemplate("db/list.html", context);
+		}
+		
+		throw new RuntimeException("Unknown URL: " + url);
+	}
+		
 	public static class Logger {
 		public Logger(StringBuffer log){
 			m_log = log;
@@ -255,7 +324,8 @@ public abstract class BoaServer extends NanoHTTPD {
 				if (mainFile.exists()) {
 					String main = FileUtil.slurpFile(mainFile);
 					BoaApp app = new BoaApp(appDir.getName(), main);
-					m_vm.addApp(app);					
+					m_vm.addApp(app);
+					m_vm.getLog().append("Added app: " + appDir.getName() + "\n");
 				} else {
 					m_vm.getLog().append("No main.js found for " + appDir.getName() + "\n");
 				}

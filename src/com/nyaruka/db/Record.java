@@ -40,9 +40,13 @@ public class Record {
 	 * @return
 	 */
 	public String toString(){
+		return toJSON().toString();
+	}
+	
+	public JSON toJSON(){
 		JSON json = new JSON(m_data.toString());
 		json.put("id", m_id);
-		return json.toString();
+		return json;
 	}
 
 	public JSON getData(){ return m_data; }

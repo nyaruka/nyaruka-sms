@@ -36,7 +36,7 @@ function Response(){
 			_response.set(key, value);
 		} 
 		else if (typeof value === 'object') {
-			if (value.length > 0) {
+			if (value.length != null) {
 				console.log("Setting JSON Array: " + value);
 				_response.setJSONArray(key, JSON.stringify(value));
 			} else {

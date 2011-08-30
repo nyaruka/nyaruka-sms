@@ -1,5 +1,4 @@
 			
-
 db.ensureCollection("contacts");
 
 function echo(req, resp){
@@ -16,5 +15,3 @@ function echo(req, resp){
 }
 
 router.addHttpHandler('echo', echo);
-
-

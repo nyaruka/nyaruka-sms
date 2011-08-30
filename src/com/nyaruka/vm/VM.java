@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import org.mozilla.javascript.Context;
@@ -36,7 +37,7 @@ public class VM {
 	 * Starts our server, creating a new context and scope and loading all of
 	 * our apps in order.
 	 */
-	public void start() {
+	public void start(List<JSEval> evals) {
 		m_db = new DB();
 		m_db.open();
 		m_db.init();
@@ -48,7 +49,10 @@ public class VM {
 
 		m_scope = m_context.initStandardObjects();
 		
-		initContext(m_context, m_scope);
+		// evaluate our JS init
+		for (JSEval eval : evals) {
+			execJS(eval.m_js, eval.m_name, m_context, m_scope);			
+		}
 		
 		try {
 			ScriptableObject.defineClass(m_scope, DBWrapper.class);
@@ -77,15 +81,9 @@ public class VM {
 		}
 	}
 	
-	public void initContext(Context context, ScriptableObject scope){
-		execFile(new File("assets/static/js/json2.js"), context, scope);
-		execFile(new File("assets/sys/js/jsInit.js"), context, scope);
-	}
-	
-	public void execFile(File file, Context context, ScriptableObject scope){
+	public void execJS(String js, String name, Context context, ScriptableObject scope){
 		try{
-			String js = FileUtil.slurpFile(file);
-			context.evaluateString(scope, js, file.getName(), 1, null);			
+			context.evaluateString(scope, js, name, 1, null);			
 		} catch (Throwable t){
 			t.printStackTrace();
 		}
@@ -102,7 +100,7 @@ public class VM {
 	 * @return HttpResponse if this app handles this request, null otherwise
 	 * @throws RuntimeException if an error occurs running the handler
 	 */
-	public HttpResponse handleHttpRequest(HttpRequest request){
+	public HttpResponse handleHttpRequest(HttpRequest request, String requestInit){
 		HttpRoute route = m_router.lookupHttpHandler(request.url());
 		
 		// no route found?  then this app doesn't deal with this, return null
@@ -119,7 +117,7 @@ public class VM {
 		ScriptableObject.putProperty(m_scope, "_request", request);
 		ScriptableObject.putProperty(m_scope, "_response", response);		
 		
-		execFile(new File("assets/sys/js/requestInit.js"), m_context, m_scope);
+		execJS(requestInit, "requestInit.js", m_context, m_scope);
 		
 		Object args[] = { m_scope.get("__request", m_scope), m_scope.get("__response", m_scope) };
 		try{
@@ -144,9 +142,9 @@ public class VM {
 		m_db.close();
 	}
 	
-	public void reload(){
+	public void reload(List<JSEval> evals){
 		m_router.reset();
-		start();
+		start(evals);
 	}
 
 	public Router getRouter(){ return m_router;	}
@@ -154,6 +152,20 @@ public class VM {
 	public DB getDB(){ return m_db; }
 	public static VM getVM(){ return s_this; }
 
+	
+	public static class JSEval {
+		public JSEval(String js, String name) {
+			m_js = js;
+			m_name = name;			
+		}
+		
+		public String getName() { return m_name; }
+		public String getJS() { return m_js; }
+		
+		private String m_name;
+		private String m_js;
+	}
+	
 	/** Our system-wide log */
 	private StringBuffer m_log = new StringBuffer();
 	

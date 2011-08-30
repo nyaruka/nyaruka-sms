@@ -1,21 +1,27 @@
 package com.nyaruka.vm;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 import org.json.JSONObject;
 
 import com.nyaruka.db.Collection;
 import com.nyaruka.json.JSON;
+import com.nyaruka.util.FileUtil;
+import com.nyaruka.vm.VM.JSEval;
 
 import junit.framework.TestCase;
 
 public class VMTest extends TestCase {
 
+	
 	public void testSyntaxError(){
 		VM vm = new VM();
 		BoaApp app = new BoaApp("test", "asdf()");
 		vm.addApp(app);
 		
-		vm.start();
+		vm.start(getEvals());
 		
 		assertEquals(BoaApp.ERROR, app.getState()); 
 		assertTrue(vm.getLog().length() > 0);
@@ -25,19 +31,19 @@ public class VMTest extends TestCase {
 		VM vm = new VM();		
 		BoaApp app = new BoaApp("test", "");
 		vm.addApp(app);
-		vm.start();
+		vm.start(getEvals());
 		
 		assertNull(vm.getRouter().lookupHttpHandler("foo"));
 		
 		HttpRequest request = new HttpRequest("hello", "GET", new Properties());
-		assertNull(vm.handleHttpRequest(request));
+		assertNull(vm.handleHttpRequest(request, getRequestInit()));
 	}
 	
 	public void testLogging(){
 		VM vm = new VM();
 		BoaApp app = new BoaApp("test", "console.log(\"hello world\");");
 		vm.addApp(app);
-		vm.start();
+		vm.start(getEvals());
 		
 		assertEquals("hello world", vm.getLog().toString());
 	}
@@ -51,10 +57,12 @@ public class VMTest extends TestCase {
 			"router.addHttpHandler('hello', hello);";
 		BoaApp app = new BoaApp("test", main);
 		vm.addApp(app);
-		vm.start();
+		
+		List<JSEval> evals = getEvals();
+		vm.start(evals);
 		
 		HttpRequest request = new HttpRequest("hello", "GET", new Properties());
-		HttpResponse response = vm.handleHttpRequest(request);
+		HttpResponse response = vm.handleHttpRequest(request, getRequestInit());
 		assertEquals("original", vm.getLog().toString());
 		
 		vm.getLog().setLength(0);
@@ -64,9 +72,9 @@ public class VMTest extends TestCase {
 			"};  " + 
 			"router.addHttpHandler('hello', hello);";
 		app.setMain(main);
-		vm.reload();
+		vm.reload(evals);
 		
-		response = vm.handleHttpRequest(request);
+		response = vm.handleHttpRequest(request, getRequestInit());
 		assertEquals("reloaded", vm.getLog().toString());
 	}
 	
@@ -81,14 +89,14 @@ public class VMTest extends TestCase {
 			"router.addHttpHandler('hello', hello);";
 		BoaApp app = new BoaApp("test", basic);
 		vm.addApp(app);
-		vm.start();
+		vm.start(getEvals());
 		
 		assertNull(vm.getRouter().lookupHttpHandler("foo"));
 		assertNotNull(vm.getRouter().lookupHttpHandler("hello"));
 		
 		// try calling the handler
 		HttpRequest request = new HttpRequest("hello", "GET", new Properties());
-		HttpResponse response = vm.handleHttpRequest(request);
+		HttpResponse response = vm.handleHttpRequest(request, getRequestInit());
 		
 		assertNotNull(response);
 		assertEquals("{\"hello\":\"world\"}", response.getData().toString());
@@ -109,10 +117,10 @@ public class VMTest extends TestCase {
 			"router.addHttpHandler('hello', hello);";
 		BoaApp app = new BoaApp("test", main);
 		vm.addApp(app);
-		vm.start();
+		vm.start(getEvals());
 		
 		HttpRequest request = new HttpRequest("hello", "GET", new Properties());
-		HttpResponse response = vm.handleHttpRequest(request);
+		HttpResponse response = vm.handleHttpRequest(request, getRequestInit());
 		
 		JSON d = response.getData();
 		assertEquals(true, d.getBoolean("bool")); 
@@ -134,10 +142,10 @@ public class VMTest extends TestCase {
 			"router.addHttpHandler('hello', hello);";
 		BoaApp app = new BoaApp("test", main);		
 		vm.addApp(app);
-		vm.start();
+		vm.start(getEvals());
 		
 		HttpRequest request = new HttpRequest("hello", "GET", new Properties());
-		HttpResponse response = vm.handleHttpRequest(request);
+		HttpResponse response = vm.handleHttpRequest(request, getRequestInit());
 		assertNotNull(response);
 		assertEquals("{\"test\":8}", response.getData().toString());
 	}
@@ -154,13 +162,13 @@ public class VMTest extends TestCase {
 			"router.addHttpHandler('/contacts/add', addContact);";
 		BoaApp app = new BoaApp("contacts", main);
 		vm.addApp(app);
-		vm.start();
+		vm.start(getEvals());
 		
 		Properties params = new Properties();
 		params.put("name", "Eric Newcomer");
 		//params.put("age", "32");
 		HttpRequest request = new HttpRequest("/contacts/add", "GET", params);
-		HttpResponse response = vm.handleHttpRequest(request);
+		HttpResponse response = vm.handleHttpRequest(request, getRequestInit());
 		
 		assertNotNull(response);
 		
@@ -168,4 +176,16 @@ public class VMTest extends TestCase {
 		assertEquals(1, contacts.find("{}").count());
 		assertEquals("Eric Newcomer", contacts.find("{}").next().getData().getString("name"));
 	}
+	
+	private String getRequestInit() {
+		return FileUtil.slurpFile(new File("assets/sys/js/requestInit.js"));
+	}
+	
+	private List<JSEval> getEvals() {
+		List<JSEval> evals = new ArrayList<JSEval>();
+		evals.add(new JSEval("assets/static/js/json2.js", "json2.js"));
+		evals.add(new JSEval("assets/sys/js/jsInit.js", "jsInit.js"));
+		return evals;
+	}
+
 }

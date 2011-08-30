@@ -5,7 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.nyaruka.http.HttpServer;
+import com.nyaruka.http.BoaServer;
 
 /**
  * Dev subclass of HttpServer, just services the files locally and provides
@@ -16,19 +16,34 @@ import com.nyaruka.http.HttpServer;
  * 
  * @author nicp
  */
-public class DevHttpServer extends HttpServer {
+public class DevHttpServer extends BoaServer {
 
 	public DevHttpServer(int port, File assetsDir) throws IOException {
 		super(port);
-		m_assetsDir = assetsDir;
+		m_assetsDir = assetsDir;		
 	}
 
 	/**
 	 * For the dev server we just serve our files straight from the file system.
 	 */
 	public InputStream getInputStream(String path) throws IOException {
+		System.out.println(new File(m_assetsDir, path).getAbsolutePath());
 		return new FileInputStream(new File(m_assetsDir, path));
 	}
+	
+	public File getAppsDir() {
+		return new File(m_assetsDir, "apps");
+	}
+	
+	public File getStaticDir() {
+		return new File(m_assetsDir, "static");
+	}
+	
+	@Override
+	public File getSysDir() {
+		return new File(m_assetsDir, "sys");
+	}
+
 	
 	public static void main(String argv[]){
 		String directory = argv[0];
@@ -40,7 +55,7 @@ public class DevHttpServer extends HttpServer {
 		}
 		
 		try{
-			new DevHttpServer(port, new File(directory));
+			DevHttpServer server = new DevHttpServer(port, new File(directory));
 			System.out.println("HTTP server started on port: " + port);
 			System.out.println("CTRL-C to Stop");
 			new Thread(){
@@ -61,4 +76,5 @@ public class DevHttpServer extends HttpServer {
 	
 	/** The filesystem root for our assets directory */
 	private File m_assetsDir;
+
 }

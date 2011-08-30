@@ -8,19 +8,32 @@
 // user can define their functions inline in main.js or do includes for their views ie: include('echo.js')
 
 
+db.ensureCollection("posts");
+
 //===============
 // HTTP STUFF
 //===============
 
 function echo(request, response){
-	response.put("uri", request.get('uri'));
-	response.put("method", request.get('method'));
+	if (request.method == "POST"){
+		console.log("POST: " + request.params['post']);
+		db.posts.save({ post: request.params['post'],
+						date: new Date().getTime() });	
+	} 
+	var cursor = db.posts.find({});
+	var records = [];	
+	while (cursor.hasNext()){
+		records[records.length] = cursor.next();
+	}
+	response.set("records", records);
+
+	console.log("URI: " + request.url);
+	response.set("url", request.url);
+	response.set("method", request.method);
 	console.log("log log log");
 
-	var params = request.get('params').keys();
-	while (params.hasMoreElements()){
-	    var key = params.nextElement();
-		console.log(key + ": " + request.get('params').get(key));
+	for (var key in request.params){
+		console.log(key + ": " + request.params[key]);
 	}
 	
 	// by default the template will be named after the view, but can be overridden
@@ -31,10 +44,10 @@ function echo(request, response){
 }
 
 // users tie URLs to handlers via addRoute()
-controller.addRoute("./echo", echo);
+// controller.addRoute("./echo", echo);
 
 // same thing
-controller.addRoute("echo", echo);
+router.addHttpHandler("echo", echo);
 
 // alternatively, though not as flexible to renames
 // controller.addRoute("/echo/echo", echo)
@@ -52,4 +65,4 @@ function smsEcho(sms){
 }
 
 // users can add SMS support via addHandler()
-controller.addHandler(echoHandler);
+// controller.addHandler(echoHandler);

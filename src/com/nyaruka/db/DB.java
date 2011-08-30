@@ -35,12 +35,16 @@ public class DB {
 
 	public void open(){
 		try{
-			new File("/tmp/foo.db").delete();
+			//new File("/tmp/foo.db").delete();
 			m_db = new SQLiteConnection(new File("/tmp/foo.db"));
 			m_db.open(true);
 		} catch (Throwable t){
 			throw new RuntimeException(t);
 		}
+	}
+	
+	public void close() {
+		m_db.dispose();
 	}
 	
 	private void exec(String sql){
@@ -63,7 +67,7 @@ public class DB {
 	
 	public void init(){
 		// record types, maybe should be called collections? 
-		exec("CREATE TABLE `collections` (" +
+		exec("CREATE TABLE IF NOT EXISTS `collections` (" +
 			 "`id` integer PRIMARY KEY," +
 			 "`name` varchar(128)," + 
 			 "`int0` varchar(128)," +
@@ -79,7 +83,7 @@ public class DB {
 		")");
 		
 		// our actual records
-		exec("CREATE TABLE `records` (" +
+		exec("CREATE TABLE IF NOT EXISTS `records` (" +
 			  "`id` integer PRIMARY KEY," +
 			  "`collection` integer," +
 			  "`data` text," +			  

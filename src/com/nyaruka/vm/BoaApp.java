@@ -29,14 +29,18 @@ public class BoaApp {
 	 * @param main
 	 */
 	public void load(Context context, ScriptableObject scope){
-		context.evaluateString(scope, m_main, m_namespace, 1, null);
+		context.evaluateString(scope, m_main, m_namespace + "/main.js", 1, null);
 	}
 
 	public void setMain(String main){
 		m_main = main;
 		m_state = STALE;
 	}
-	
+
+	public String getNamespace() {
+		return m_namespace;
+	}
+
 	public char getState(){ return m_state; }
 	public void setState(char state){ m_state = state; }
 	
@@ -48,4 +52,5 @@ public class BoaApp {
 	
 	/** Our main, essentially the code for this app */
 	private String m_main;
+
 }

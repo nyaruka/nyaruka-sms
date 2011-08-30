@@ -1,3 +1,19 @@
+function Cursor(cursor){
+	this.cursor = cursor;
+
+	this.next = function(){
+		var record = JSON.parse(cursor.next().toString());
+		return record;
+	};	
+	
+	this.hasNext = function(){
+		return this.cursor.hasNext();
+	};
+	
+	return this;
+}
+
+
 function Collection(collection){
 	this.collection = collection;
 
@@ -11,6 +27,10 @@ function Collection(collection){
 
 	this.save = function(json){
 		this.collection.save(JSON.stringify(json));
+	};
+	
+	this.find = function(json){
+		return Cursor(this.collection.find(JSON.stringify(json)));
 	};
 	
 	return this;

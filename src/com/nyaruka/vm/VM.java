@@ -13,6 +13,8 @@ import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ScriptableObject;
 
 import com.nyaruka.db.DB;
+import com.nyaruka.util.FileUtil;
+import com.nyaruka.vm.Router.HttpRoute;
 
 /**
  * Responsible for managing the Rhino Context and VM, as well as loading and reloading
@@ -23,10 +25,6 @@ import com.nyaruka.db.DB;
 public class VM {
 
 	public VM(){
-		m_db = new DB();
-		m_db.open();
-		m_db.init();
-		
 		s_this = this;
 	}
 	
@@ -39,8 +37,13 @@ public class VM {
 	 * our apps in order.
 	 */
 	public void start() {
+		m_db = new DB();
+		m_db.open();
+		m_db.init();
+		
 		// Create our context and turn off compilation
 		m_context = Context.enter();
+		
 		m_context.setOptimizationLevel(-1);
 
 		m_scope = m_context.initStandardObjects();
@@ -53,9 +56,6 @@ public class VM {
 			throw new RuntimeException(t);
 		}
 		
-		// create and initialize our router
-		m_router = new Router();
-		
 		// stick our log in the scope
 		LoggingWrapper logWrapper = new LoggingWrapper(m_log);
 				
@@ -65,8 +65,9 @@ public class VM {
 			ScriptableObject.putProperty(m_scope, "console", logWrapper);			
 			
 			try{
+				m_router.setCurrentApp(app);
 				app.load(m_context, m_scope);
-				app.setState(BoaApp.ERROR);
+				app.setState(BoaApp.RUNNING);
 			} catch (Throwable t){
 				CharArrayWriter stack = new CharArrayWriter();
 				t.printStackTrace(new PrintWriter(stack));
@@ -77,14 +78,13 @@ public class VM {
 	}
 	
 	public void initContext(Context context, ScriptableObject scope){
-		execFile(new File("assets/js/json2.js"), context, scope);
-		execFile(new File("assets/js/jsInit.js"), context, scope);
+		execFile(new File("assets/static/js/json2.js"), context, scope);
+		execFile(new File("assets/sys/js/jsInit.js"), context, scope);
 	}
 	
 	public void execFile(File file, Context context, ScriptableObject scope){
 		try{
-			InputStream is = new FileInputStream(file);
-			String js = new Scanner(is).useDelimiter("\\A").next();
+			String js = FileUtil.slurpFile(file);
 			context.evaluateString(scope, js, file.getName(), 1, null);			
 		} catch (Throwable t){
 			t.printStackTrace();
@@ -103,26 +103,27 @@ public class VM {
 	 * @throws RuntimeException if an error occurs running the handler
 	 */
 	public HttpResponse handleHttpRequest(HttpRequest request){
-		Function handler = m_router.lookupHttpHandler(request.url());
+		HttpRoute route = m_router.lookupHttpHandler(request.url());
 		
-		// no handler found?  then this app doesn't deal with this, return null
-		if (handler == null){
+		// no route found?  then this app doesn't deal with this, return null
+		if (route == null){
 			return null;
 		}
 
-		HttpResponse response = new HttpResponse();
+		HttpResponse response = new HttpResponse(route.getApp());
 		LoggingWrapper logWrapper = new LoggingWrapper(m_log);
 		
 		ScriptableObject.putProperty(m_scope, "router", m_router);
 		ScriptableObject.putProperty(m_scope, "_db", m_db);
 		ScriptableObject.putProperty(m_scope, "console", logWrapper);
 		ScriptableObject.putProperty(m_scope, "_request", request);
+		ScriptableObject.putProperty(m_scope, "_response", response);		
 		
-		execFile(new File("assets/js/requestInit.js"), m_context, m_scope);
+		execFile(new File("assets/sys/js/requestInit.js"), m_context, m_scope);
 		
-		Object args[] = { m_scope.get("__request", m_scope), response };
+		Object args[] = { m_scope.get("__request", m_scope), m_scope.get("__response", m_scope) };
 		try{
-			handler.call(m_context, m_scope, m_scope, args);
+			route.getHandler().call(m_context, m_scope, m_scope, args);
 		} catch (Throwable t){
 			CharArrayWriter stack = new CharArrayWriter();
 			t.printStackTrace(new PrintWriter(stack));
@@ -133,10 +134,18 @@ public class VM {
 		return response;
 	}
 	
-	public void reload(){
+	public void reset(){
+		m_apps.clear();
+	}
+
+	public void stop(){
 		Context.exit();
+		
+		m_db.close();
+	}
+	
+	public void reload(){
 		m_router.reset();
-		m_log.setLength(0);
 		start();
 	}
 
@@ -159,7 +168,7 @@ public class VM {
 	private DB m_db;
 		
 	/** our global router in charge of keeping the map of URL patterns to handlers */
-	private Router m_router;
+	private Router m_router = new Router();
 	
 	/** Singleton instance */
 	private static VM s_this;

@@ -4,6 +4,7 @@ import java.util.Properties;
 import org.json.JSONObject;
 
 import com.nyaruka.db.Collection;
+import com.nyaruka.json.JSON;
 
 import junit.framework.TestCase;
 
@@ -113,7 +114,7 @@ public class VMTest extends TestCase {
 		HttpRequest request = new HttpRequest("hello", "GET", new Properties());
 		HttpResponse response = vm.handleHttpRequest(request);
 		
-		JSONObject d = response.getData();
+		JSON d = response.getData();
 		assertEquals(true, d.getBoolean("bool")); 
 		assertEquals(10, d.getInt("int")); 
 		assertEquals(6000000000l, d.getLong("long")); 

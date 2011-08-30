@@ -7,7 +7,7 @@ public class LoggingWrapper {
 	}
 	
 	public void log(String msg){
-		m_buffer.append(msg);
+		m_buffer.append(msg + "\n");
 	}
 	
 	StringBuffer m_buffer;

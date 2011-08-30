@@ -1,6 +1,8 @@
 package com.nyaruka.vm;
 
-import org.json.JSONObject;
+import org.json.JSONArray;
+
+import com.nyaruka.json.JSON;
 
 /**
  * Our representation of an HTTP Response. 
@@ -9,50 +11,43 @@ import org.json.JSONObject;
  */
 public class HttpResponse {
 
-	public HttpResponse(){
+	public HttpResponse(BoaApp app) {
+		m_app = app;
 	}
 
-	public void set(String key, boolean value){
+	public void setJSON(String key, String json){
+		m_data.put(key, new JSON(json));
+	}
+	
+	public void setJSONArray(String key, String json){
 		try{
-			m_data.put(key, value);
-		} catch (Exception e){
-			throw new RuntimeException(e);
+			m_data.put(key, new JSONArray(json));
+		} catch (Throwable t){
+			throw new RuntimeException(t);
 		}
+	}
+	
+	public void set(String key, boolean value){
+		m_data.put(key, value);
 	}
 	
 	public void set(String key, String value){
-		try{
-			m_data.put(key, value);
-		} catch (Exception e){
-			throw new RuntimeException(e);
-		}
+		m_data.put(key, value);
 	}
 	
 	public void set(String key, int value){
-		try{
-			m_data.put(key, value);
-		} catch (Exception e){
-			throw new RuntimeException(e);
-		}
+		m_data.put(key, value);
 	}
 	
 	public void set(String key, long value){
-		try{
-			m_data.put(key, value);
-		} catch (Exception e){
-			throw new RuntimeException(e);
-		}
+		m_data.put(key, value);
 	}
 	
 	public void set(String key, double value){
-		try{
-			m_data.put(key, value);
-		} catch (Exception e){
-			throw new RuntimeException(e);
-		}
+		m_data.put(key, value);
 	}
 	
-	public JSONObject getData(){
+	public JSON getData(){
 		return m_data;
 	}
 	
@@ -64,6 +59,11 @@ public class HttpResponse {
 		return m_template;
 	}
 	
-	private JSONObject m_data = new JSONObject();
+	public BoaApp getApp() {
+		return m_app;
+	}
+	
+	private BoaApp m_app;
+	private JSON m_data = new JSON();
 	private String m_template = null;
 }

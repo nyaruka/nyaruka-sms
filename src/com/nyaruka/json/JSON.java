@@ -2,6 +2,7 @@ package com.nyaruka.json;
 
 import java.util.Iterator;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class JSON {
@@ -79,6 +80,14 @@ public class JSON {
 	public JSON getJSON(String key){
 		try{
 			return new JSON(m_o.getJSONObject(key));
+		} catch (Throwable t){
+			throw new JSONException(t);
+		}
+	}
+	
+	public void put(String key, JSONArray val){
+		try{
+			m_o.put(key, val);
 		} catch (Throwable t){
 			throw new JSONException(t);
 		}

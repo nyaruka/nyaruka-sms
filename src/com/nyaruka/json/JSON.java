@@ -1,6 +1,10 @@
 package com.nyaruka.json;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -150,4 +154,42 @@ public class JSON {
 	}
 	
 	private JSONObject m_o;
+
+	public Map<String, Object> toMap() {
+		
+		HashMap<String,Object> map = new HashMap<String,Object>();		
+		Iterator keys = keys();
+		while (keys.hasNext()) {
+			String key = (String) keys.next();
+			
+			Object value = get(key);			
+			if (value instanceof JSON) {
+				map.put(key, ((JSON)value).toMap());
+			} else if (value instanceof JSONArray){
+				JSONArray array = (JSONArray)value;
+				map.put(key, arrayToList(array));
+			} else {
+				map.put(key, get(key));
+			}
+		}
+		
+		return map;
+	}
+	
+	private static ArrayList arrayToList(JSONArray jsonArray) {
+		try{
+			ArrayList list = new ArrayList();
+			for (int i=0; i<jsonArray.length(); i++) {
+				Object o = jsonArray.get(i);			
+				if (o instanceof JSONArray) {
+					list.add(arrayToList((JSONArray)o));
+				} else {
+					list.add(new JSON((JSONObject) o).toMap());
+				}
+			}
+			return list;
+		} catch (Exception e){
+			throw new RuntimeException(e);
+		}
+	}
 }

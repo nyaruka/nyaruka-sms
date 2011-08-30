@@ -1,21 +1,15 @@
 package com.nyaruka.http;
 
-import java.io.File;
-
 import java.io.CharArrayWriter;
-import java.io.FilenameFilter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.net.URL;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
-import java.util.Scanner;
-import java.util.regex.Pattern;
 
-import org.json.JSONObject;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.ScriptableObject;
+import net.asfun.jangod.template.TemplateEngine;
 
 import com.nyaruka.util.FileUtil;
 import com.nyaruka.vm.BoaApp;
@@ -37,65 +31,68 @@ public abstract class BoaServer extends NanoHTTPD {
 	public void start() {
 		m_vm.reset();
 		loadApps();
-		m_vm.reload();
+		m_vm.reload();		
+		m_templates.getConfiguration().setWorkspace("assets/sys");
+		m_appTemplates.getConfiguration().setWorkspace("assets/apps");
 	}
 	
-	public synchronized Response serve( String uri, String method, Properties header, Properties params, Properties files ){
+	public synchronized Response serve( String url, String method, Properties header, Properties params, Properties files ){
 		
-		m_vm.getLog().append(method + " " + uri + "\n");
-		
-		if (uri.startsWith("/templates")) {			
-			uri = "/apps/" + uri.substring("/templates".length());
-			return serveFile(uri, header);			
-		}
-		else if (uri.indexOf('.') > -1){
-			return serveFile(uri, header);			
-		} 
-		else if (uri.equals("/log")) {
-			
-			String log = FileUtil.slurpFile(new File(getSysDir(), "log.html"));
-			log = log.replace("##LOG", m_vm.getLog().toString());			
-			return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, log);
-		}
-		
-		if (uri.startsWith("/")) {
-			uri = uri.substring(1);
-		}
-		
-		HttpRequest request = new HttpRequest(uri, method, params);
+		m_vm.getLog().append(method + " " + url + "\n");
 		
 		try{
 			start();
-
+			
+			if (url.indexOf('.') > -1){
+				return serveFile(url, header);			
+			}
+			else if (url.equals("/edit")) {
+				if (!params.containsKey("filename")) {
+					throw new IllegalArgumentException("The editor respectfully requests a file to edit.");
+				} else {
+					File file = new File("assets/apps/" + (String)params.get("filename"));
+					if (method.equals("POST")) {												
+						String contents = (String)params.getProperty("editor");
+						FileUtil.writeFile(file, contents);
+						return renderTemplate("success.html", new HashMap<String,Object>());
+					} else {
+						return renderEditor(file, params.getProperty("filename"));
+					}
+				}
+			}
+			else if (url.equals("/log")) {		
+				HashMap<String,Object> data = new HashMap<String,Object>();
+				data.put("log", m_vm.getLog().toString());
+				return renderTemplate("log.html", data);			
+			}
+			
+			if (url.startsWith("/")) {
+				url = url.substring(1);
+			}
+			
+			HttpRequest request = new HttpRequest(url, method, params);
+			
 			HttpResponse response = m_vm.handleHttpRequest(request);
 
 			if (response != null) {
-				String render = FileUtil.slurpFile(new File(getSysDir(), "render.html"));
-
+				
 				String templateFile = response.getTemplate();
+				if (templateFile == null){
+					templateFile = url + ".html";
+				}
+				
 				if (!templateFile.startsWith("/")) {
 					templateFile = "/" + response.getApp().getNamespace() + "/" + templateFile;
 				}
 				
-				templateFile = "/templates" + templateFile;
-				
-				render = render.replace("##TEMPLATE", templateFile);
-				render = render.replace("##DATA", response.getData().toString());
-
-				// wrap it in nanohttp response
-				return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, render);
+				Map<String,Object> data = response.getData().toMap();				
+				String html = m_appTemplates.process(templateFile, data);
+				return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, html);
 			} else {
-				return new Response(NanoHTTPD.HTTP_NOTFOUND, NanoHTTPD.MIME_HTML, "File not found: " + uri);
+				return new Response(NanoHTTPD.HTTP_NOTFOUND, NanoHTTPD.MIME_HTML, "File not found: " + url);
 			}
 		} catch (Throwable t){
-			t.printStackTrace();
-			
-			String log = FileUtil.slurpFile(new File(getSysDir(), "error.html"));
-			log = log.replace("##LOG", m_vm.getLog().toString());	
-			CharArrayWriter stack = new CharArrayWriter();
-			t.printStackTrace(new PrintWriter(stack));
-			log = log.replace("##ERROR", stack.toString());
-			return new Response(NanoHTTPD.HTTP_INTERNALERROR, NanoHTTPD.MIME_HTML, log);
+			return renderError(t);
 		} finally {
 			m_vm.stop();
 		}
@@ -112,8 +109,6 @@ public abstract class BoaServer extends NanoHTTPD {
 		
 		StringBuffer m_log;
 	}
-	
-	
 	
 	/**
 	 * Serves file from homeDir and its' subdirectories (only).
@@ -219,6 +214,39 @@ public abstract class BoaServer extends NanoHTTPD {
 		return res;
 	}
 	
+	private Response renderEditor(File file, String filename) {
+		String fileContents = FileUtil.slurpFile(file);
+		Map<String,Object> data = new HashMap<String,Object>();
+		data.put("contents", fileContents);		
+		data.put("filename", filename);
+		return renderTemplate("editor.html", data);
+	}
+	
+	private Response renderTemplate(String template, Map<String,Object> variables) {
+		try {
+			String html = m_templates.process(template, variables);
+			return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, html);
+		} catch (Throwable t) {
+			return renderError(t);
+		}
+	}
+	
+	private Response renderError(Throwable error) {		
+		try {
+			CharArrayWriter stack = new CharArrayWriter();
+			error.printStackTrace(new PrintWriter(stack));
+			HashMap<String, Object> data = new HashMap<String,Object>();
+			data.put("error", stack.toString());
+			String html = m_templates.process("error.html", data);
+			return new Response(NanoHTTPD.HTTP_INTERNALERROR, NanoHTTPD.MIME_HTML, html);
+		} catch (Throwable t) {
+			t.printStackTrace();			
+			CharArrayWriter stack = new CharArrayWriter();
+			t.printStackTrace(new PrintWriter(stack));
+			return new Response(NanoHTTPD.HTTP_INTERNALERROR, NanoHTTPD.MIME_HTML, stack.toString());
+		}		
+	}
+	
 	private void loadApps() {
 		File apps = getAppsDir();		
 		for (File appDir : apps.listFiles()) {
@@ -234,6 +262,9 @@ public abstract class BoaServer extends NanoHTTPD {
 			}
 		}		
 	}
+	
+	private TemplateEngine m_templates = new TemplateEngine();
+	private TemplateEngine m_appTemplates = new TemplateEngine();
 	
 	/** this vm is where all the magic happens */
 	private VM m_vm = new VM();

@@ -1,0 +1,36 @@
+		
+Your Mom's Template
+
+<pre>
+url: {{ url }}
+method: {{ method }}
+</pre>
+
+<form method="POST">
+  First Name: <input type="text" name="first"></input><br/>
+  Last Name: <input type="text" name="last"></input><br/>
+  Phone: <input type="text" name="phone"></input><br/>
+  Email: <input type="text" name="email"></input><br/>
+  <input type="submit" value="Save"></input>
+</form>
+</pre>
+
+<table>
+    <tr>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Email</th>
+    </tr>
+{% for contact in contacts %}
+    <tr>
+        <td>{{ contact.id }}</td>
+        <td>{{ contact.first }} {{ contact.last }}</td>
+        <td>{{ contact.phone }}</td>
+        <td>{{ contact.email }}</td>
+    </tr>
+{% endfor %} 
+</table>
+
+
+

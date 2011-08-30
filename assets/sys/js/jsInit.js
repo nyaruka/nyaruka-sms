@@ -10,6 +10,16 @@ function Cursor(cursor){
 		return this.cursor.hasNext();
 	};
 	
+	this.all = function(){
+		var items = [];
+		while(this.hasNext()){
+			items[items.length] = this.next();
+			console.log("item--");
+		}
+		console.log("num items: " + items.length);
+		return items;
+	};
+	
 	return this;
 }
 

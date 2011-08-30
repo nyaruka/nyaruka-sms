@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}{{filename}}{% endblock %}
+  
+{% block extrastyle %}
+  <style type="text/css" media="screen">
+    body {
+      margin: 0 auto;
+	  padding: 0;    
+      
+    }
+    
+    #toolbar {
+	  background: #333;
+	  color: white;
+	  height:29px;
+	  margin: 0 auto;
+	  padding: 5;
+	  border-bottom: 1px #EEE;
+    }
+    
+    #editor { 
+        margin: 0;
+        position: absolute;
+        top: 30;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        overflow: hidden;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div id="toolbar">
+
+<input id="save" type="button" value="Save">
+
+
+</div>
+<pre id="editor">
+	{{contents|escape}}
+</pre>
+{% endblock%}
+
+{% block extrascript %}    
+<script src="static/js/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="static/js/theme-twilight.js" type="text/javascript" charset="utf-8"></script>
+<script src="static/js/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
+<script src="static/js/mode-html.js" type="text/javascript" charset="utf-8"></script>
+
+<script type="text/javascript">
+
+function saveFile() {
+	$.ajax({
+  		type: 'POST',
+  		data: { 'editor' : editor.getSession().getValue() },
+  		success: function() { console.log("Success!");},
+  		failure: function() { console.log("failure.");}  		
+	});    
+}
+
+$(document).ready(function() {
+
+	var filename = '{{filename}}';
+
+	// load up our editor
+    editor = ace.edit("editor");
+    editor.setShowPrintMargin(false);
+    editor.setTheme("ace/theme/twilight");
+
+	if (filename.indexOf(".html") > 0) {
+		var HTMLMode = require("ace/mode/html").Mode;
+	    editor.getSession().setMode(new HTMLMode());	    
+	} else {
+	    var JavaScriptMode = require("ace/mode/javascript").Mode;
+	    editor.getSession().setMode(new JavaScriptMode());
+    }
+    
+    var canon = require("pilot/canon");
+    
+    canon.addCommand({
+    	name: "save",
+    	description: "Save the file",
+    	params:[],
+    	exec: saveFile,
+    	bindKey: {
+    		mac: 'Command-S',
+    		win: 'Ctrl-S',
+    		sender: 'editor'    		 
+    	}});
+    
+    
+    $("#save").click(function() {    	
+		saveFile();
+    });
+
+});
+</script>
+{% endblock %}

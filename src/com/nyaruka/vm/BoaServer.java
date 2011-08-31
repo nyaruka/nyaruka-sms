@@ -28,7 +28,6 @@ import com.nyaruka.db.Record;
 import com.nyaruka.http.BoaHttpServer;
 import com.nyaruka.json.JSON;
 import com.nyaruka.util.FileUtil;
-import com.nyaruka.vm.VM.JSEval;
 
 public class BoaServer {
 
@@ -52,7 +51,8 @@ public class BoaServer {
 		m_templates.getConfiguration().setWorkspace("assets/sys");
 		m_appTemplates.getConfiguration().setWorkspace("assets/apps");
 		
-		m_requestInitJS = readFile("assets/sys/js/requestInit.js");
+		m_requestInit = new JSEval(readFile("assets/sys/js/requestInit.js"), "requestInit.js");
+
 	}
 	
 	public void stop() {
@@ -87,7 +87,7 @@ public class BoaServer {
 	public String handleRequest(String url, String method, Properties params) {		
 		try {
 			HttpRequest request = new HttpRequest(url, method, params);
-			HttpResponse response = m_vm.handleHttpRequest(request, m_requestInitJS);
+			HttpResponse response = m_vm.handleHttpRequest(request, m_requestInit);
 	
 			if (response != null) {
 					
@@ -217,7 +217,7 @@ public class BoaServer {
 		}
 	}
 	
-	private String m_requestInitJS;
+	private JSEval m_requestInit;
 	
 	private TemplateEngine m_templates = new TemplateEngine();
 	private TemplateEngine m_appTemplates = new TemplateEngine();

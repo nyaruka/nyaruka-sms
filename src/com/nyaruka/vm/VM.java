@@ -1,20 +1,14 @@
 package com.nyaruka.vm;
 
 import java.io.CharArrayWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ScriptableObject;
 
 import com.nyaruka.db.DB;
-import com.nyaruka.util.FileUtil;
 import com.nyaruka.vm.Router.HttpRoute;
 
 /**
@@ -51,7 +45,7 @@ public class VM {
 		
 		// evaluate our JS init
 		for (JSEval eval : evals) {
-			execJS(eval.m_js, eval.m_name, m_context, m_scope);			
+			eval.exec(m_context, m_scope);
 		}
 		
 		try {
@@ -81,14 +75,6 @@ public class VM {
 		}
 	}
 	
-	public void execJS(String js, String name, Context context, ScriptableObject scope){
-		try{
-			context.evaluateString(scope, js, name, 1, null);			
-		} catch (Throwable t){
-			t.printStackTrace();
-		}
-	}
-
 	/**
 	 * Try to handle the passed in request, setting any values
 	 * used in the response object.
@@ -100,7 +86,7 @@ public class VM {
 	 * @return HttpResponse if this app handles this request, null otherwise
 	 * @throws RuntimeException if an error occurs running the handler
 	 */
-	public HttpResponse handleHttpRequest(HttpRequest request, String requestInit){
+	public HttpResponse handleHttpRequest(HttpRequest request, JSEval requestInit){
 		HttpRoute route = m_router.lookupHttpHandler(request.url());
 		
 		// no route found?  then this app doesn't deal with this, return null
@@ -117,7 +103,7 @@ public class VM {
 		ScriptableObject.putProperty(m_scope, "_request", request);
 		ScriptableObject.putProperty(m_scope, "_response", response);		
 		
-		execJS(requestInit, "requestInit.js", m_context, m_scope);
+		requestInit.exec(m_context, m_scope);
 		
 		Object args[] = { m_scope.get("__request", m_scope), m_scope.get("__response", m_scope) };
 		try{
@@ -152,19 +138,6 @@ public class VM {
 	public DB getDB(){ return m_db; }
 	public static VM getVM(){ return s_this; }
 
-	
-	public static class JSEval {
-		public JSEval(String js, String name) {
-			m_js = js;
-			m_name = name;			
-		}
-		
-		public String getName() { return m_name; }
-		public String getJS() { return m_js; }
-		
-		private String m_name;
-		private String m_js;
-	}
 	
 	/** Our system-wide log */
 	private StringBuffer m_log = new StringBuffer();

@@ -35,7 +35,7 @@ public class DB {
 
 	public void open(){
 		try{
-			//new File("/tmp/foo.db").delete();
+			new File("/tmp/foo.db").delete();
 			m_db = new SQLiteConnection(new File("/tmp/foo.db"));
 			m_db.open(true);
 		} catch (Throwable t){

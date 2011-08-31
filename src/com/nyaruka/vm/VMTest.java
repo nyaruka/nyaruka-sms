@@ -9,7 +9,6 @@ import org.json.JSONObject;
 import com.nyaruka.db.Collection;
 import com.nyaruka.json.JSON;
 import com.nyaruka.util.FileUtil;
-import com.nyaruka.vm.VM.JSEval;
 
 import junit.framework.TestCase;
 
@@ -45,7 +44,7 @@ public class VMTest extends TestCase {
 		vm.addApp(app);
 		vm.start(getEvals());
 		
-		assertEquals("hello world", vm.getLog().toString());
+		assertEquals("hello world\n", vm.getLog().toString());
 	}
 	
 	public void testReload(){
@@ -63,7 +62,7 @@ public class VMTest extends TestCase {
 		
 		HttpRequest request = new HttpRequest("hello", "GET", new Properties());
 		HttpResponse response = vm.handleHttpRequest(request, getRequestInit());
-		assertEquals("original", vm.getLog().toString());
+		assertEquals("original\n", vm.getLog().toString());
 		
 		vm.getLog().setLength(0);
 		main =
@@ -75,7 +74,7 @@ public class VMTest extends TestCase {
 		vm.reload(evals);
 		
 		response = vm.handleHttpRequest(request, getRequestInit());
-		assertEquals("reloaded", vm.getLog().toString());
+		assertEquals("reloaded\n", vm.getLog().toString());
 	}
 	
 	public void testBasic(){
@@ -101,7 +100,7 @@ public class VMTest extends TestCase {
 		assertNotNull(response);
 		assertEquals("{\"hello\":\"world\"}", response.getData().toString());
 		assertEquals("hello.html", response.getTemplate());
-		assertEquals("hello called", vm.getLog().toString());		
+		assertEquals("hello called\n", vm.getLog().toString());		
 	}
 
 	public void testTypes() throws Exception {
@@ -156,8 +155,8 @@ public class VMTest extends TestCase {
 			"db.ensureCollection('contacts');" +
 			"db.contacts.ensureIntIndex('age');" +
 			"function addContact(req, resp){" +
-			"  db.contacts.save({ name: req.get('name')," +
-			"                     age: req.get('age') }); " +
+			"  db.contacts.save({ name: req.params.name," +
+			"                     age: req.params.age }); " +
 			"}" +
 			"router.addHttpHandler('/contacts/add', addContact);";
 		BoaApp app = new BoaApp("contacts", main);
@@ -177,14 +176,14 @@ public class VMTest extends TestCase {
 		assertEquals("Eric Newcomer", contacts.find("{}").next().getData().getString("name"));
 	}
 	
-	private String getRequestInit() {
-		return FileUtil.slurpFile(new File("assets/sys/js/requestInit.js"));
+	private JSEval getRequestInit() {
+		return new JSEval(FileUtil.slurpFile(new File("assets/sys/js/requestInit.js")), "requestInit.js");
 	}
 	
 	private List<JSEval> getEvals() {
 		List<JSEval> evals = new ArrayList<JSEval>();
-		evals.add(new JSEval("assets/static/js/json2.js", "json2.js"));
-		evals.add(new JSEval("assets/sys/js/jsInit.js", "jsInit.js"));
+		evals.add(new JSEval(FileUtil.slurpFile(new File("assets/static/js/json2.js")), "json2.js"));
+		evals.add(new JSEval(FileUtil.slurpFile(new File("assets/sys/js/jsInit.js")), "jsInit.js"));
 		return evals;
 	}
 

@@ -31,17 +31,15 @@ __request = Request();
 function Response(){
 	
 	this.set = function(key, value){
-		console.log("TYPE: " + typeof value);
-		if(typeof value === 'string' ){
-			_response.set(key, value);
-		} 
-		else if (typeof value === 'object') {
+		if (typeof value === 'object') {
 			if (value.length != null) {
 				console.log("Setting JSON Array: " + value);
 				_response.setJSONArray(key, JSON.stringify(value));
 			} else {
 				_response.setJSON(key, JSON.stringify(value));
 			}
+		} else {
+			_response.set(key, value);
 		}
 			
 	};

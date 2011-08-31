@@ -1,29 +1,16 @@
-{% extends "base.html" %}
+{% extends "db/base.html" %}
 
 {% block extrastyle %}
-<style>
-table {
-	border: 1px solid black;
-}
-
-table th {
-	border-bottom: 1px solid black;
-	border-right: 1px solid black;	
-}
-
-table td {
-	border-bottom: 1px solid #ccc;
-	border-right: 1px solid #ccc;
-	padding: 5px;
-}
-</style>
 {% endblock %}
 
 {% block content %}
-<div id="dbtable">
+<div id="table_container">
 
-<h2>{{ collection.name }}</h2>
+<div id="table_header" class="gradient">
+  <h2>{{ collection.name }}</h2>
+</div>
 
+<div id="table_contents">
 <table width="100%" cellspacing=0 cellpadding=0>
 <tr>
   <th>id</th>
@@ -33,7 +20,7 @@ table td {
 </tr>
 
 {% for record in records %}
-<tr>
+<tr class="{% cycle 'row1','row2' %}">
   <td>{{ record.id }}</td>
   {% for key in keys %}
   <td>{{ record|get:key }}</td>
@@ -43,5 +30,14 @@ table td {
 
 </table>
 
+<div id="table_footer" class="gradient">
+  <h2>
+    {{ records|length }} records
+  </h2>
 </div>
+
+</div>
+
+</div>
+
 {% endblock %}

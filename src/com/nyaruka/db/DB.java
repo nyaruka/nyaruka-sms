@@ -21,8 +21,13 @@ public class DB {
 	
 	private static HashMap<String, String> OPERATORS = new HashMap<String, String>();
 	
-	public DB(){
+	public DB() {
 		initOperators();
+	}
+	
+	public DB(File file){
+		this();
+		m_dbFile = file;
 	}
 	
 	public static void initOperators(){
@@ -35,8 +40,12 @@ public class DB {
 
 	public void open(){
 		try{
-			new File("/tmp/foo.db").delete();
-			m_db = new SQLiteConnection(new File("/tmp/foo.db"));
+			if (m_dbFile != null) {
+				m_db = new SQLiteConnection(m_dbFile);
+			} else {
+				m_db = new SQLiteConnection();
+			}
+			
 			m_db.open(true);
 		} catch (Throwable t){
 			throw new RuntimeException(t);
@@ -388,6 +397,7 @@ public class DB {
 		}		
 	}
 
+	private File m_dbFile;
 	private SQLiteConnection m_db;
 	private HashMap<String, Collection> m_collections = new HashMap<String, Collection>();
 

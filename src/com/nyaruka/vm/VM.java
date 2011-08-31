@@ -1,6 +1,7 @@
 package com.nyaruka.vm;
 
 import java.io.CharArrayWriter;
+import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +20,13 @@ import com.nyaruka.vm.Router.HttpRoute;
  */
 public class VM {
 
-	public VM(){
+	public VM() {
 		s_this = this;
+	}
+	
+	public VM(File dbFile){
+		this();
+		m_dbFile = dbFile;
 	}
 	
 	public void addApp(BoaApp app){
@@ -32,7 +38,7 @@ public class VM {
 	 * our apps in order.
 	 */
 	public void start(List<JSEval> evals) {
-		m_db = new DB();
+		m_db = new DB(m_dbFile);
 		m_db.open();
 		m_db.init();
 		
@@ -148,6 +154,9 @@ public class VM {
 	/* Current scope and state of our VM */
 	private Context m_context;
 	private ScriptableObject m_scope;
+	
+	/** where our DB will write */
+	private File m_dbFile;
 	
 	/** Our database */
 	private DB m_db;

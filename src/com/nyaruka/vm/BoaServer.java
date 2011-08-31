@@ -31,8 +31,13 @@ import com.nyaruka.util.FileUtil;
 
 public class BoaServer {
 
-	public BoaServer(String directory) throws IOException {		
+	public BoaServer(String directory, String dbFile) throws IOException {		
 		new BoaHttpServer(8080, this);
+		if (dbFile != null) {
+			m_vm = new VM(new File(dbFile));
+		} else {
+			m_vm = new VM();
+		}
 	}
 
 	public String readFile(String path) {
@@ -200,8 +205,13 @@ public class BoaServer {
 	public static void main(String[] args) {
 		String directory = args[0];
 		
+		String dbFile = null;
+		if (args.length > 1) {
+			dbFile = args[1];
+		}
+		
 		try {
-			BoaServer boa = new BoaServer(directory);
+			BoaServer boa = new BoaServer(directory, dbFile);
 			new Thread(){
 				public void run(){
 					while(true){
@@ -223,6 +233,6 @@ public class BoaServer {
 	private TemplateEngine m_appTemplates = new TemplateEngine();
 	
 	/** this vm is where all the magic happens */
-	private VM m_vm = new VM();
+	private VM m_vm;
 
 }

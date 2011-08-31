@@ -7,7 +7,7 @@ import com.nyaruka.json.JSON;
 import junit.framework.TestCase;
 
 public class DBTest extends TestCase {
-
+	
 	public void testDBCreation() throws Exception {
 		DB db = new DB();
 		db.open();

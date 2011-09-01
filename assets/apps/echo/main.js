@@ -1,11 +1,17 @@
-			
+
 db.ensureCollection("contacts");
 
 function echo(req, resp){
     if (req.method == 'POST'){
         console.log("POST: " + JSON.stringify(req.params));
         if (req.params.first && req.params.last){
-            db.contacts.save(req.params);
+            rec = req.params;
+            rec.submitted = {
+                time: new Date().getTime(),
+                ip: '127.0.0.1'
+            };
+
+            db.contacts.save(rec);
         }
     }
 

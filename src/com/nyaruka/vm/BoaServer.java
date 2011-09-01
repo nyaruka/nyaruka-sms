@@ -149,7 +149,9 @@ public class BoaServer {
 	}
 
 	public String renderDB(String url, String method){
-		Pattern COLL = Pattern.compile("^/db/(.*)/$");
+		Pattern COLL = Pattern.compile("^/db/([a-zA-Z]+)/$");
+		Pattern RECORD = Pattern.compile("^/db/([a-zA-Z]+)/(\\d+)/$");
+		
 		Matcher matcher = null;
 		
 		if (url.equals("/db")){
@@ -197,6 +199,31 @@ public class BoaServer {
 			context.put("collection", coll);
 			context.put("records", records);
 			return renderTemplate("db/list.html", context);
+		}
+		
+		matcher = RECORD.matcher(url);
+		if (matcher.find()){
+			String collName = matcher.group(1);
+			Collection coll = m_vm.getDB().ensureCollection(collName);
+			long id = Long.parseLong(matcher.group(2));
+			
+			Record rec = coll.getRecord(id);
+			
+			JSON data = rec.getData();
+				
+			// add all our unique keys
+			ArrayList<String> fields = new ArrayList<String>();
+			Iterator item_keys = data.keys();
+			while(item_keys.hasNext()){
+				fields.add(item_keys.next().toString());
+			}
+			
+			HashMap<String, Object> context = new HashMap<String, Object>();
+			context.put("collection", coll);
+			context.put("record", rec);
+			context.put("values", rec.toJSON().toMap());
+			context.put("fields", fields);
+			return renderTemplate("db/read.html", context);
 		}
 		
 		throw new RuntimeException("Unknown URL: " + url);

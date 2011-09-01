@@ -1,0 +1,30 @@
+{% extends "db/base.html" %}
+
+{% block extrastyle %}
+{% endblock %}
+
+{% block content %}
+<div id="table_header" class="gradient">
+  <h2><a href="/db/{{ collection.name }}/">{{ collection.name }}</a> - {{ record.id }}</h2>
+</div>
+
+<div id="table_contents">
+<table width="100%" cellspacing=0 cellpadding=0>
+  {% for field in fields %}
+  <tr>
+    <td class="field_label">{{ field }}:</td>
+    <td>{{ values|get:field }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+
+<div id="table_footer" class="gradient">
+  &nbsp;
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

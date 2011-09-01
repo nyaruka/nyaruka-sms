@@ -3,6 +3,10 @@ html {
 
 }
 
+a {
+    text-decoration: none;
+}
+
 body {
     margin-left: 20;
     margin-right: 20;
@@ -73,6 +77,15 @@ table td {
     padding-bottom: 10px;
 }
 
+#table_header h2 a {
+    color: #555;
+}
+
+#table_header h2 a:hover {
+    color: #555;
+    text-decoration: underline;
+}
+
 #table_footer {
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
@@ -102,6 +115,18 @@ table td {
     vertical-align: middle;
 }
 
-table tr.row2 td {
+table tr.row2 {
     background: #fbfbfb;
+}
+
+.field_label {
+    color: black;
+    font-weight: bold;
+    width: 100px;
+    text-align: right;
+}
+
+tr.record_row:hover {
+    background: #eef;
+    cursor: pointer;
 }

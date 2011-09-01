@@ -13,14 +13,14 @@
 <div id="table_contents">
 <table width="100%" cellspacing=0 cellpadding=0>
 <tr>
-  <th>id</th>
+  <th width="40">id</th>
   {% for key in keys %}
   <th>{{ key }}</th>
   {% endfor %}
 </tr>
 
 {% for record in records %}
-<tr class="{% cycle 'row1','row2' %}">
+<tr class="record_row {% cycle 'row1','row2' %}" record_id="{{ record.id }}">
   <td>{{ record.id }}</td>
   {% for key in keys %}
   <td>{{ record|get:key }}</td>
@@ -37,7 +37,14 @@
 </div>
 
 </div>
+{% endblock %}
 
-</div>
-
+{% block extrascript %}
+<script>
+  $(document).ready(function(){
+    $(".record_row").click(function(){
+      document.location.href = "/db/{{collection.name}}/" + $(this).attr("record_id") + "/";
+    });
+  });
+</script>
 {% endblock %}

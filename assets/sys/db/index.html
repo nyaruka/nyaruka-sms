@@ -1,10 +1,46 @@
 {% extends "db/base.html" %}
 
-{% block content %}
+{% block extrastyle %}
+{% endblock %}
 
-<h2>Collections</h2>
+{% block content %}
+<div id="table_container">
+
+<div id="table_header" class="gradient">
+  <h2>dbs</h2>
+</div>
+
+<div id="table_contents">
+<table width="100%" cellspacing=0 cellpadding=0>
+<tr>
+  <th>name</th>
+  <th>size</th>
+</tr>
+
 {% for collection in collections %}
-  <a href="/db/{{collection}}/">{{ collection }}</a><br/>
+<tr class="collection_row {% cycle 'row1','row2' %}" name="{{ collection.name }}">
+  <td>{{ collection.name }}</td>
+  <td>{{ collection.size }}</td>
+</tr>
 {% endfor %}
 
+</table>
+
+<div id="table_footer" class="gradient">
+  <h2>
+    {{ collections|length }} collections
+  </h2>
+</div>
+
+</div>
+{% endblock %}
+
+{% block extrascript %}
+<script>
+  $(document).ready(function(){
+    $(".collection_row").click(function(){
+      document.location.href = "/db/" + $(this).attr("name") + "/";
+    });
+  });
+</script>
 {% endblock %}

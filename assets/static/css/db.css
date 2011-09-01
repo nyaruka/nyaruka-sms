@@ -130,3 +130,8 @@ tr.record_row:hover {
     background: #eef;
     cursor: pointer;
 }
+
+tr.collection_row:hover {
+    background: #eef;
+    cursor: pointer;
+}

@@ -154,16 +154,16 @@ public class BoaServer {
 		
 		Matcher matcher = null;
 		
-		if (url.equals("/db")){
+		if (url.equals("/db") || url.equals("/db/")){
 			HashMap<String, Object> context = new HashMap<String, Object>();
-			context.put("collections", m_vm.getDB().getCollectionNames());
+			context.put("collections", m_vm.getDB().getCollections());
 			return renderTemplate("db/index.html", context);
 		} 
 		
 		matcher = COLL.matcher(url);
 		if (matcher.find()){
 			String collName = matcher.group(1);
-			Collection coll = m_vm.getDB().ensureCollection(collName);
+			Collection coll = m_vm.getDB().getCollection(collName);
 			
 			// our set of keys
 			HashSet<String> keys = new HashSet<String>();
@@ -204,7 +204,7 @@ public class BoaServer {
 		matcher = RECORD.matcher(url);
 		if (matcher.find()){
 			String collName = matcher.group(1);
-			Collection coll = m_vm.getDB().ensureCollection(collName);
+			Collection coll = m_vm.getDB().getCollection(collName);
 			long id = Long.parseLong(matcher.group(2));
 			
 			Record rec = coll.getRecord(id);

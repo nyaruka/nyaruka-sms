@@ -163,6 +163,14 @@ public class DB {
 		}
 	}
 	
+	public Collection getCollection(String name){
+		if (!m_collections.containsKey(name)){
+			throw new RuntimeException("No collection with name " + name);
+		} else {
+			return m_collections.get(name);
+		}
+	}
+	
 	public Collection ensureCollection(String name) {
 		if (!collectionExists(name)){
 			try{
@@ -177,6 +185,14 @@ public class DB {
 			load();
 		}
 		return m_collections.get(name);
+	}
+	
+	public ArrayList<Collection> getCollections(){
+		ArrayList<Collection> collections = new ArrayList<Collection>();
+		for (Collection coll : m_collections.values()){
+			collections.add(coll);
+		}
+		return collections;
 	}
 	
 	public ArrayList<String> getCollectionNames(){

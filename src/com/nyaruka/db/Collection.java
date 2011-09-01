@@ -93,6 +93,10 @@ public class Collection {
 		return false;
 	}
 	
+	public int getSize(){
+		return find("{}").count();
+	}
+	
 	/**
 	 * Ensures that an index is present within the passed in array
 	 * @param map The array of index names

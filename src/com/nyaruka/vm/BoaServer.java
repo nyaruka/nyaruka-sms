@@ -29,34 +29,44 @@ import com.nyaruka.http.BoaHttpServer;
 import com.nyaruka.json.JSON;
 import com.nyaruka.util.FileUtil;
 
-public class BoaServer {
+public abstract class BoaServer {
 
-	public BoaServer(String directory, String dbFile) throws IOException {		
-		new BoaHttpServer(8080, this);
+	public BoaServer(int port, String dbFile) {
+		
+		try {
+			new BoaHttpServer(port, this);
+		} catch (Throwable t) {
+			throw new RuntimeException(t);
+		}
+		
 		if (dbFile != null) {
 			m_vm = new VM(new File(dbFile));
 		} else {
 			m_vm = new VM();
 		}
 	}
+	
+	/** Define out to get the contents of a given path */
+	public abstract InputStream getInputStream(String path);
 
-	public String readFile(String path) {
-		return FileUtil.slurpFile(new File(path));
-	}
+	/** Direct template engines how to find files on the given platform */
+	public abstract void configureTemplateEngines(TemplateEngine systemTemplates, TemplateEngine appTemplates);
+
+	/** Read the apps from whatever storage mechanism is approrpriate for the server */
+	public abstract List<BoaApp> getApps();
 	
 	public void start() {
 
 		List<JSEval> evals = new ArrayList<JSEval>();
-		evals.add(new JSEval(FileUtil.slurpFile(new File("assets/static/js/json2.js")), "json2.js"));
-		evals.add(new JSEval(FileUtil.slurpFile(new File("assets/sys/js/jsInit.js")), "jsInit.js"));
+		evals.add(new JSEval(readFile("static/js/json2.js"), "json2.js"));
+		evals.add(new JSEval(readFile("sys/js/jsInit.js"), "jsInit.js"));
 
 		m_vm.reset();
 		loadApps();
-		m_vm.reload(evals);		
-		m_templates.getConfiguration().setWorkspace("assets/sys");
-		m_appTemplates.getConfiguration().setWorkspace("assets/apps");
+		m_vm.reload(evals);
 		
-		m_requestInit = new JSEval(readFile("assets/sys/js/requestInit.js"), "requestInit.js");
+		configureTemplateEngines(m_templates, m_appTemplates);		
+		m_requestInit = new JSEval(readFile("sys/js/requestInit.js"), "requestInit.js");
 
 	}
 	
@@ -64,30 +74,10 @@ public class BoaServer {
 		m_vm.stop();
 	}
 	
-	private void loadApps() {
-		File apps = new File("assets/apps");
-		for (File appDir : apps.listFiles()) {
-			if (appDir.isDirectory()) {
-				File mainFile = new File(appDir, "main.js");
-				if (mainFile.exists()) {
-					String main = FileUtil.slurpFile(mainFile);
-					BoaApp app = new BoaApp(appDir.getName(), main);
-					m_vm.addApp(app);
-					m_vm.getLog().append("Added app: " + appDir.getName() + "\n");
-				} else {
-					m_vm.getLog().append("No main.js found for " + appDir.getName() + "\n");
-				}
-			}
-		}		
-	}
-
 	public void log(String message) {
 		m_vm.getLog().append(message).append("\n");
 	}
 
-	public InputStream getInputStream(String uri) throws FileNotFoundException {
-		return new FileInputStream("assets/" + uri);
-	}
 
 	public String handleRequest(String url, String method, Properties params) {		
 		try {
@@ -228,32 +218,23 @@ public class BoaServer {
 		
 		throw new RuntimeException("Unknown URL: " + url);
 	}
-
-	public static void main(String[] args) {
-		String directory = args[0];
-		
-		String dbFile = null;
-		if (args.length > 1) {
-			dbFile = args[1];
-		}
-		
-		try {
-			BoaServer boa = new BoaServer(directory, dbFile);
-			new Thread(){
-				public void run(){
-					while(true){
-						try{
-							Thread.sleep(1000000);
-						} catch (Throwable t){}
-					}
-				}
-				
-			}.start();
-		} catch (Throwable t) {
-			t.printStackTrace();
+	
+	public void loadApps() {
+		for (BoaApp app : getApps()) {
+			m_vm.addApp(app);
+			log("Added " + app.getNamespace() + " app");
 		}
 	}
 	
+	/**
+	 * Read the contents of the file at the given path
+	 */
+	public String readFile(String path) {
+		InputStream is = getInputStream(path);
+		return FileUtil.slurpStream(is);
+	}
+
+		
 	private JSEval m_requestInit;
 	
 	private TemplateEngine m_templates = new TemplateEngine();

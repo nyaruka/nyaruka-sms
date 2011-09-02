@@ -7,14 +7,15 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.nyaruka.db.dev.DevDB;
 import com.nyaruka.util.FileUtil;
 
 import net.asfun.jangod.template.TemplateEngine;
 
 public class DevBoaServer extends BoaServer {
 
-	public DevBoaServer(int port, String dbFile, String rootDir) {
-		super(port, dbFile);
+	public DevBoaServer(int port, File dbFile, String rootDir) {
+		super(port, new DevDB(dbFile));
 		
 		m_rootDir = rootDir;
 		if (m_rootDir != null && !m_rootDir.endsWith("/")) {
@@ -71,9 +72,9 @@ public class DevBoaServer extends BoaServer {
 			path = args[1];
 		}
 
-		String dbFile = null;
+		File dbFile = null;
 		if (args.length > 2) {
-			dbFile = args[2];
+			dbFile = new File(args[2]);
 		}
 		
 		try {

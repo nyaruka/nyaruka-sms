@@ -6,11 +6,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import com.almworks.sqlite4java.SQLiteConnection;
-import com.almworks.sqlite4java.SQLiteStatement;
 import com.nyaruka.json.JSON;
 
-public class DB {
+public abstract class DB {
 	
 	public static final int RECORD_ID = 0;
 	public static final int RECORD_COLLECTION_ID = 1;
@@ -21,13 +19,10 @@ public class DB {
 	
 	private static HashMap<String, String> OPERATORS = new HashMap<String, String>();
 	
+	public abstract Connection getConnection();
+	
 	public DB() {
 		initOperators();
-	}
-	
-	public DB(File file){
-		this();
-		m_dbFile = file;
 	}
 	
 	public static void initOperators(){
@@ -40,27 +35,22 @@ public class DB {
 
 	public void open(){
 		try{
-			if (m_dbFile != null) {
-				m_db = new SQLiteConnection(m_dbFile);
-			} else {
-				m_db = new SQLiteConnection();
-			}
-			
-			m_db.open(true);
+			m_connection = getConnection();
+			m_connection.open(true);
 		} catch (Throwable t){
 			throw new RuntimeException(t);
 		}
 	}
 	
 	public void close() {
-		m_db.dispose();
-		m_collections = null;
+	    m_collections = null;
+	    m_connection.dispose();
 	}
 	
 	private void exec(String sql){
-		SQLiteConnection conn = null;
+		Connection conn = null;
 		try{
-			conn = m_db.exec(sql);
+			conn = m_connection.exec(sql);
 		} catch (Throwable t){
 			throw new RuntimeException(t);
 		} finally {
@@ -117,7 +107,7 @@ public class DB {
 		m_collections = new HashMap<String, Collection>();
 
 		try{
-			SQLiteStatement st = m_db.prepare("SELECT * FROM collections");
+			Statement st = m_connection.prepare("SELECT * FROM collections");
 			while (st.step()){
 				int id = st.columnInt(0);
 				String name = st.columnString(1);
@@ -146,7 +136,7 @@ public class DB {
 
 	public void saveCollection(Collection type){
 		try{
-			SQLiteStatement st = m_db.prepare("UPDATE collections SET int0=?, int1=?, int2=?, int3=?, int4=?," +
+			Statement st = m_connection.prepare("UPDATE collections SET int0=?, int1=?, int2=?, int3=?, int4=?," +
 											  "                       str0=?, str1=?, str2=?, str3=?, str4=? " + 
 											  " WHERE id=?");
 			// bind our int indexes
@@ -200,7 +190,7 @@ public class DB {
 			}
 			
 			try{
-				SQLiteStatement st = m_db.prepare("INSERT INTO collections VALUES(NULL, ?, " +
+				Statement st = m_connection.prepare("INSERT INTO collections VALUES(NULL, ?, " +
 												  "NULL, NULL, NULL, NULL, NULL, " +
 												  "NULL, NULL, NULL, NULL, NULL)");
 				st.bind(COLLECTION_NAME, name);
@@ -300,12 +290,12 @@ public class DB {
 	
 	public Record save(Collection collection, JSON data){
 		try{
-			SQLiteStatement st = null;
+			Statement st = null;
 			long id = -1;
 			
 			// this is an update
 			if (data.has("id")){
-				st = m_db.prepare("UPDATE records SET collection=?, data=?," +
+				st = m_connection.prepare("UPDATE records SET collection=?, data=?," +
 						"int0=?, int1=?, int2=?, int3=?, int4=?, " +
 						"str0=?, str1=?, str2=?, str3=?, str4=? " + 
 				        " WHERE id=?");
@@ -313,7 +303,7 @@ public class DB {
 				st.bind(13, id);
 				data.getObject().remove("id");
 			} else {
-				st = m_db.prepare("INSERT INTO records VALUES(NULL, ?, ?," +
+				st = m_connection.prepare("INSERT INTO records VALUES(NULL, ?, ?," +
 						"?, ?, ?, ?, ?, " +
 						"?, ?, ?, ?, ? " + 
 				")");
@@ -357,7 +347,7 @@ public class DB {
 			
 			st.step();
 			if (id == -1){
-				id = m_db.getLastInsertId();
+				id = m_connection.getLastInsertId();
 			}
 
 			return new Record(id, data);
@@ -384,7 +374,7 @@ public class DB {
 			String whereClause = generateSQL(coll, query, params);
 			
 			// calculate our # of matches first
-			SQLiteStatement st = m_db.prepare("SELECT count(id) " + 
+			Statement st = m_connection.prepare("SELECT count(id) " + 
 											  "from records" + whereClause);
 			for (int i=0; i<params.size(); i++){
 				st.bind(i+1, params.get(i));
@@ -393,7 +383,7 @@ public class DB {
 			
 			int rowCount = st.columnInt(0); 
 			
-			st = m_db.prepare("SELECT id, collection, data " +
+			st = m_connection.prepare("SELECT id, collection, data " +
 							  "from records" + whereClause + " ORDER BY id ASC");
 			for (int i=0; i<params.size(); i++){
 				st.bind(i+1, params.get(i));
@@ -407,7 +397,7 @@ public class DB {
 	
 	public Record getRecord(Collection collection, long id){
 		try{
-			SQLiteStatement st = m_db.prepare("SELECT id, collection, data " +
+			Statement st = m_connection.prepare("SELECT id, collection, data " +
 											  "from records where id=?");
 			st.bind(1, id);
 			
@@ -423,7 +413,7 @@ public class DB {
 	
 	public void deleteRecord(Collection collection, long id) {
 		try{
-			SQLiteStatement st = m_db.prepare("DELETE from records where id=?");
+			Statement st = m_connection.prepare("DELETE from records where id=?");
 			st.bind(1, id);
 			st.step();
 		} catch (Throwable t){
@@ -431,8 +421,6 @@ public class DB {
 		}		
 	}
 
-	private File m_dbFile;
-	private SQLiteConnection m_db;
-	private HashMap<String, Collection> m_collections = null;
-
+	private Connection m_connection;
+    private HashMap<String, Collection> m_collections = null;
 }

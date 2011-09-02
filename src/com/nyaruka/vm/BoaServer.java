@@ -25,6 +25,7 @@ import org.json.JSONObject;
 
 import com.nyaruka.db.Collection;
 import com.nyaruka.db.Cursor;
+import com.nyaruka.db.DB;
 import com.nyaruka.db.Record;
 import com.nyaruka.http.BoaHttpServer;
 import com.nyaruka.http.NanoHTTPD;
@@ -34,7 +35,7 @@ import com.nyaruka.util.FileUtil;
 
 public abstract class BoaServer {
 
-	public BoaServer(int port, String dbFile) {
+	public BoaServer(int port, DB db) {
 		
 		try {
 			new BoaHttpServer(port, this);
@@ -42,11 +43,7 @@ public abstract class BoaServer {
 			throw new RuntimeException(t);
 		}
 		
-		if (dbFile != null) {
-			m_vm = new VM(new File(dbFile));
-		} else {
-			m_vm = new VM();
-		}
+		m_vm = new VM(db);
 	}
 	
 	/** Define out to get the contents of a given path */

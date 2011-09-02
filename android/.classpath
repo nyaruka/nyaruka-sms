@@ -6,5 +6,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/boa"/>
 	<classpathentry kind="lib" path="/Users/eric/nyaruka/nyaruka-sms/lib/jangod-template.jar"/>
 	<classpathentry kind="lib" path="/Users/eric/nyaruka/nyaruka-sms/lib/js.jar"/>
+	<classpathentry kind="lib" path="/Users/eric/nyaruka/nyaruka-sms/lib/sqlite4java.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

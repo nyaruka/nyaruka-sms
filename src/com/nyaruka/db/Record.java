@@ -1,6 +1,5 @@
 package com.nyaruka.db;
 
-import com.almworks.sqlite4java.SQLiteStatement;
 import com.nyaruka.json.JSON;
 
 public class Record {
@@ -10,7 +9,7 @@ public class Record {
 		m_data = data;
 	}
 	
-	public Record(SQLiteStatement st){
+	public Record(Statement st){
 		try{
 			m_id = st.columnLong(DB.RECORD_ID);
 			String text = st.columnString(DB.RECORD_DATA);

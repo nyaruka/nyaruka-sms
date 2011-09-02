@@ -1,10 +1,8 @@
 package com.nyaruka.db;
 
-import com.almworks.sqlite4java.SQLiteStatement;
-
 public class Cursor {
 
-	public Cursor(SQLiteStatement st, int count){
+	public Cursor(Statement st, int count){
 		m_count = count;
 		m_st = st;
 	}
@@ -40,6 +38,6 @@ public class Cursor {
 	
 	private boolean m_shouldStep = true;
 	private boolean m_hasNext = false;
-	private SQLiteStatement m_st;
+	private Statement m_st;
 	private int m_count;
 }

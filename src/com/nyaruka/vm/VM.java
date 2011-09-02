@@ -20,13 +20,9 @@ import com.nyaruka.vm.Router.HttpRoute;
  */
 public class VM {
 
-	public VM() {
+	public VM(DB db) {
 		s_this = this;
-	}
-	
-	public VM(File dbFile){
-		this();
-		m_dbFile = dbFile;
+		m_db = db;
 	}
 	
 	public void addApp(BoaApp app){
@@ -38,7 +34,6 @@ public class VM {
 	 * our apps in order.
 	 */
 	public void start(List<JSEval> evals) {
-		m_db = new DB(m_dbFile);
 		m_db.open();
 		m_db.init();
 		

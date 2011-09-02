@@ -4,19 +4,18 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import org.json.JSONObject;
-
-import com.nyaruka.db.Collection;
-import com.nyaruka.json.JSON;
-import com.nyaruka.util.FileUtil;
 
 import junit.framework.TestCase;
 
+import com.nyaruka.db.Collection;
+import com.nyaruka.db.dev.DevDB;
+import com.nyaruka.json.JSON;
+import com.nyaruka.util.FileUtil;
+
 public class VMTest extends TestCase {
 
-	
 	public void testSyntaxError(){
-		VM vm = new VM();
+		VM vm = new VM(new DevDB());
 		BoaApp app = new BoaApp("test", "asdf()");
 		vm.addApp(app);
 		
@@ -27,7 +26,7 @@ public class VMTest extends TestCase {
 	}
 	
 	public void testEmpty(){
-		VM vm = new VM();		
+		VM vm = new VM(new DevDB());		
 		BoaApp app = new BoaApp("test", "");
 		vm.addApp(app);
 		vm.start(getEvals());
@@ -39,7 +38,7 @@ public class VMTest extends TestCase {
 	}
 	
 	public void testLogging(){
-		VM vm = new VM();
+		VM vm = new VM(new DevDB());
 		BoaApp app = new BoaApp("test", "console.log(\"hello world\");");
 		vm.addApp(app);
 		vm.start(getEvals());
@@ -48,7 +47,7 @@ public class VMTest extends TestCase {
 	}
 	
 	public void testReload(){
-		VM vm = new VM();
+		VM vm = new VM(new DevDB());
 		String main =
 			"function hello(req, resp){ " +
 			"  console.log(\"original\");" +
@@ -78,7 +77,7 @@ public class VMTest extends TestCase {
 	}
 	
 	public void testBasic(){
-		VM vm = new VM();
+		VM vm = new VM(new DevDB());
 		String basic =
 			"function hello(req, resp){ " +
 			"  resp.set('hello', 'world'); " +
@@ -104,7 +103,7 @@ public class VMTest extends TestCase {
 	}
 
 	public void testTypes() throws Exception {
-		VM vm = new VM();
+		VM vm = new VM(new DevDB());
 		String main =
 			"function hello(req, resp){" +
 			"	resp.set('int', 10);" +
@@ -130,7 +129,7 @@ public class VMTest extends TestCase {
 	}
 	
 	public void testFunctions(){
-		VM vm = new VM();
+		VM vm = new VM(new DevDB());
 		String main =
 			"function add(a, b){" +
 			"	return a + b;" +
@@ -150,7 +149,7 @@ public class VMTest extends TestCase {
 	}
 	
 	public void testDB(){
-		VM vm = new VM();
+		VM vm = new VM(new DevDB());
 		String main = 
 			"db.ensureCollection('contacts');" +
 			"db.contacts.ensureIntIndex('age');" +
@@ -177,13 +176,13 @@ public class VMTest extends TestCase {
 	}
 	
 	private JSEval getRequestInit() {
-		return new JSEval(FileUtil.slurpFile(new File("assets/sys/js/requestInit.js")), "requestInit.js");
+		return new JSEval(FileUtil.slurpFile(new File("android/assets/sys/js/requestInit.js")), "requestInit.js");
 	}
 	
 	private List<JSEval> getEvals() {
 		List<JSEval> evals = new ArrayList<JSEval>();
-		evals.add(new JSEval(FileUtil.slurpFile(new File("assets/static/js/json2.js")), "json2.js"));
-		evals.add(new JSEval(FileUtil.slurpFile(new File("assets/sys/js/jsInit.js")), "jsInit.js"));
+		evals.add(new JSEval(FileUtil.slurpFile(new File("android/assets/static/js/json2.js")), "json2.js"));
+		evals.add(new JSEval(FileUtil.slurpFile(new File("android/assets/sys/js/jsInit.js")), "jsInit.js"));
 		return evals;
 	}
 

@@ -2,6 +2,7 @@ package com.nyaruka.db;
 
 import java.util.ArrayList;
 
+import com.nyaruka.db.dev.DevDB;
 import com.nyaruka.json.JSON;
 
 import junit.framework.TestCase;
@@ -9,7 +10,7 @@ import junit.framework.TestCase;
 public class DBTest extends TestCase {
 	
 	public void testDBCreation() throws Exception {
-		DB db = new DB();
+		DB db = new DevDB();
 		db.open();
 		db.init();
 		
@@ -44,7 +45,7 @@ public class DBTest extends TestCase {
 	}
 	
 	public void testSavingTypes() throws Exception {
-		DB db = new DB();
+		DB db = new DevDB();
 		db.open();
 		db.init();
 		
@@ -89,7 +90,7 @@ public class DBTest extends TestCase {
 	}
 	
 	public void testAddingRecords() throws Exception {
-		DB db = new DB();
+		DB db = new DevDB();
 		db.open();
 		db.init();
 		
@@ -141,7 +142,7 @@ public class DBTest extends TestCase {
 	}
 	
 	public void testFiltering() throws Exception {
-		DB db = new DB();
+		DB db = new DevDB();
 		db.open();
 		db.init();
 		

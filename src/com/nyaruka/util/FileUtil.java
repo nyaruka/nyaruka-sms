@@ -9,6 +9,10 @@ import java.util.Scanner;
 
 public class FileUtil {
 
+	public static String slurpStream(InputStream is) {
+		return new Scanner(is).useDelimiter("\\A").next();		
+	}
+	
 	/**
 	 * Reads the contents of a file into a string
 	 */

@@ -64,9 +64,14 @@ public class BoaHttpServer extends NanoHTTPD {
 				return new Response(NanoHTTPD.HTTP_NOTFOUND, NanoHTTPD.MIME_HTML, "File not found: " + url);
 			}
 		} catch (Throwable t){
+			t.printStackTrace();
 			return new Response(NanoHTTPD.HTTP_INTERNALERROR, NanoHTTPD.MIME_HTML, m_boa.renderError(t));			
 		} finally {
-			m_boa.stop();
+			try {
+				m_boa.stop();
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}
 		}
 	}
 		

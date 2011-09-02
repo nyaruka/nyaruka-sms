@@ -31,7 +31,7 @@ public class BoaHttpServer extends NanoHTTPD {
 				return serveFile(url, header);			
 			}
 			else if (url.startsWith("/db")){
-				return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, m_boa.renderDB(url, method));
+				return m_boa.renderDB(url, method, params);
 			}
 			else if (url.equals("/edit")) {
 				if (!params.containsKey("filename")) {

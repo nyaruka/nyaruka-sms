@@ -1,12 +1,14 @@
-{% extends "db/base.html" %}
-
-{% block extrastyle %}
-{% endblock %}
+{% extends "db/editor.html" %}
 
 {% block content %}
 <div id="table_container">
 
 <div id="table_header" class="gradient">
+  <div class="buttons right">
+    <a href="#" id="delete_button" class="button small destructive">delete</a>
+    <a href="#" id="add_button" class="button small">add</a>
+  </div>
+
   <h2><a href="/db/">db</a> &gt; {{ collection.name }}</h2>
 </div>
 
@@ -37,6 +39,9 @@
 </div>
 
 </div>
+
+<form id="delete_form" method="POST" action="/db/{{collection.name}}/delete/">
+</form>
 {% endblock %}
 
 {% block extrascript %}
@@ -44,6 +49,18 @@
   $(document).ready(function(){
     $(".record_row").click(function(){
       document.location.href = "/db/{{collection.name}}/" + $(this).attr("record_id") + "/";
+    });
+
+    $("#add_button").click(function(event){
+      event.preventDefault(); 
+      showEditor("Add");
+    });
+
+    $("#delete_button").click(function(event){
+      if (confirm("Remove collection?")){
+        $("#delete_form").submit();
+      }
+      event.preventDefault();
     });
   });
 </script>

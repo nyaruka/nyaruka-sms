@@ -7,6 +7,9 @@
 <div id="table_container">
 
 <div id="table_header" class="gradient">
+  <div class="buttons right">
+    <a href="#" class="small button" id="add_button">add</a>
+  </div>
   <h2>dbs</h2>
 </div>
 
@@ -33,6 +36,11 @@
 </div>
 
 </div>
+
+<form id="add_form" method="POST">
+  <input type="hidden" name="name" value="" id="collection_name"></input>
+</form>
+
 {% endblock %}
 
 {% block extrascript %}
@@ -40,6 +48,16 @@
   $(document).ready(function(){
     $(".collection_row").click(function(){
       document.location.href = "/db/" + $(this).attr("name") + "/";
+    });
+
+
+    $("#add_button").click(function(event){
+      event.preventDefault();
+      var name = prompt("Enter new collection name:");
+      if (name){
+        $("#collection_name").val(name);
+        $("#add_form").submit();
+      }
     });
   });
 </script>

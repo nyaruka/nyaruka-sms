@@ -5,10 +5,14 @@
   <link rel="stylesheet" href="/static/css/db.css" type="text/css" /> 
   {% block extrastyle %}{% endblock %} 
 </head>
-
 <body>
-{% block content %}
+{% block beforecontent %}
+{% endblock %}
 
+{% block content %}
+{% endblock %}
+
+{% block aftercontent %}
 {% endblock %}
 
 <script src="/static/js/jquery-1.6.2.min.js" type="text/javascript" charset="utf-8"></script>

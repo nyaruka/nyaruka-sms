@@ -54,6 +54,7 @@ public class DB {
 	
 	public void close() {
 		m_db.dispose();
+		m_collections = null;
 	}
 	
 	private void exec(String sql){
@@ -113,7 +114,7 @@ public class DB {
 	 * Clears our in memory data and reloads it from the database.
 	 */
 	public void load(){
-		m_collections.clear();
+		m_collections = new HashMap<String, Collection>();
 
 		try{
 			SQLiteStatement st = m_db.prepare("SELECT * FROM collections");
@@ -137,6 +138,9 @@ public class DB {
 	}
 	
 	public boolean collectionExists(String name) {
+		if (m_collections == null){
+			load();
+		}
 		return m_collections.containsKey(name);
 	}
 
@@ -164,10 +168,27 @@ public class DB {
 	}
 	
 	public Collection getCollection(String name){
-		if (!m_collections.containsKey(name)){
+		if (!collectionExists(name)){
 			throw new RuntimeException("No collection with name " + name);
 		} else {
 			return m_collections.get(name);
+		}
+	}
+	
+	public void deleteCollection(Collection collection){
+		if (collectionExists(collection.getName())){
+			try{
+				SQLiteStatement st = m_db.prepare("DELETE FROM collections where id = ?");
+				st.bind(1, collection.getId());
+				st.step();
+				
+				st = m_db.prepare("DELETE FROM records where collection = ?");
+				st.bind(1, collection.getId());
+				st.step();
+			} catch (Throwable t){
+				throw new RuntimeException(t);
+			}
+			load();
 		}
 	}
 	
@@ -204,8 +225,8 @@ public class DB {
 	}
 	
 	public static String generateSQL(Collection coll, JSON query, ArrayList<String> params){
-		String whereClause = "";
-		String delim = "";
+		String whereClause = "collection = " + coll.getId();
+		String delim = " AND ";
 		Iterator keys = query.keys();
 		while (keys.hasNext()){
 			whereClause += delim;			
@@ -227,8 +248,6 @@ public class DB {
 				whereClause += field + " = ?";
 				params.add(query.get(key).toString());
 			}
-				
-			delim = " AND ";
 		}
 		
 		if (whereClause.length() > 0){
@@ -287,6 +306,7 @@ public class DB {
 				        " WHERE id=?");
 				id = data.getLong("id");
 				st.bind(13, id);
+				data.getObject().remove("id");
 			} else {
 				st = m_db.prepare("INSERT INTO records VALUES(NULL, ?, ?," +
 						"?, ?, ?, ?, ?, " +
@@ -357,10 +377,7 @@ public class DB {
 		
 		try{
 			String whereClause = generateSQL(coll, query, params);
-				
-			System.out.println(whereClause);
-			System.out.println("params: " + params);
-		
+			
 			// calculate our # of matches first
 			SQLiteStatement st = m_db.prepare("SELECT count(id) " + 
 											  "from records" + whereClause);
@@ -368,10 +385,6 @@ public class DB {
 				st.bind(i+1, params.get(i));
 			}
 			st.step();
-			
-			for (int i=0; i<st.columnCount(); i++){
-				System.out.println(st.getColumnName(i) + " = " + st.columnValue(i));
-			}
 			
 			int rowCount = st.columnInt(0); 
 			
@@ -415,6 +428,6 @@ public class DB {
 
 	private File m_dbFile;
 	private SQLiteConnection m_db;
-	private HashMap<String, Collection> m_collections = new HashMap<String, Collection>();
+	private HashMap<String, Collection> m_collections = null;
 
 }

@@ -1,6 +1,7 @@
 package com.nyaruka.vm;
 
 import java.io.CharArrayWriter;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,6 +27,8 @@ import com.nyaruka.db.Collection;
 import com.nyaruka.db.Cursor;
 import com.nyaruka.db.Record;
 import com.nyaruka.http.BoaHttpServer;
+import com.nyaruka.http.NanoHTTPD;
+import com.nyaruka.http.NanoHTTPD.Response;
 import com.nyaruka.json.JSON;
 import com.nyaruka.util.FileUtil;
 
@@ -148,22 +151,45 @@ public class BoaServer {
 		return renderTemplate("editor.html", data);
 	}
 
-	public String renderDB(String url, String method){
+	public Response renderDB(String url, String method, Properties params){
 		Pattern COLL = Pattern.compile("^/db/([a-zA-Z]+)/$");
 		Pattern RECORD = Pattern.compile("^/db/([a-zA-Z]+)/(\\d+)/$");
+		Pattern DELETE_RECORD = Pattern.compile("^/db/([a-zA-Z]+)/(\\d+)/delete/$");		
+		Pattern DELETE_COLLECTION = Pattern.compile("^/db/([a-zA-Z]+)/delete/$");				
 		
 		Matcher matcher = null;
 		
 		if (url.equals("/db") || url.equals("/db/")){
+			if (method.equalsIgnoreCase("POST")){
+				m_vm.getDB().ensureCollection(params.getProperty("name"));
+			}
+			
 			HashMap<String, Object> context = new HashMap<String, Object>();
 			context.put("collections", m_vm.getDB().getCollections());
-			return renderTemplate("db/index.html", context);
+			return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, renderTemplate("db/index.html", context)); 
 		} 
+		
+		matcher = DELETE_COLLECTION.matcher(url);
+		if (matcher.find()){
+			String collName = matcher.group(1);
+			Collection coll = m_vm.getDB().getCollection(collName);
+			m_vm.getDB().deleteCollection(coll);
+			
+			Response resp = new Response(NanoHTTPD.HTTP_REDIRECT, NanoHTTPD.MIME_PLAINTEXT, "/db/");
+			resp.header.put("Location", "/db/");
+			return resp;
+		}
 		
 		matcher = COLL.matcher(url);
 		if (matcher.find()){
 			String collName = matcher.group(1);
 			Collection coll = m_vm.getDB().getCollection(collName);
+			
+			// they are adding a new record
+			if (method.equalsIgnoreCase("POST")){
+				JSON json = new JSON(params.getProperty("json"));
+				coll.save(json);
+			}
 			
 			// our set of keys
 			HashSet<String> keys = new HashSet<String>();
@@ -198,7 +224,21 @@ public class BoaServer {
 			context.put("keys", keys);
 			context.put("collection", coll);
 			context.put("records", records);
-			return renderTemplate("db/list.html", context);
+			String body = renderTemplate("db/list.html", context);
+			return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, body);
+		}
+		
+		matcher = DELETE_RECORD.matcher(url);
+		if (matcher.find() && method.equalsIgnoreCase("POST")){
+			String collName = matcher.group(1);
+			Collection coll = m_vm.getDB().getCollection(collName);
+			long id = Long.parseLong(matcher.group(2));
+			Record rec = coll.getRecord(id);
+			
+			coll.delete(id);
+			Response resp = new Response(NanoHTTPD.HTTP_REDIRECT, NanoHTTPD.MIME_PLAINTEXT, "/db/" + coll.getName() + "/");
+			resp.header.put("Location", "/db/" + coll.getName() + "/");
+			return resp;
 		}
 		
 		matcher = RECORD.matcher(url);
@@ -206,12 +246,18 @@ public class BoaServer {
 			String collName = matcher.group(1);
 			Collection coll = m_vm.getDB().getCollection(collName);
 			long id = Long.parseLong(matcher.group(2));
-			
 			Record rec = coll.getRecord(id);
-			
+
+			// they are posting new data
+			if (method.equalsIgnoreCase("POST")){
+				JSON json = new JSON(params.getProperty("json"));
+				json.put("id", rec.getId());
+				rec = coll.save(json);
+			} 
+
 			JSON data = rec.getData();
 				
-			// add all our unique keys
+				// add all our unique keys
 			ArrayList<String> fields = new ArrayList<String>();
 			Iterator item_keys = data.keys();
 			while(item_keys.hasNext()){
@@ -223,8 +269,11 @@ public class BoaServer {
 			context.put("record", rec);
 			context.put("values", rec.toJSON().toMap());
 			context.put("fields", fields);
-			return renderTemplate("db/read.html", context);
-		}
+			context.put("json", rec.getData().toString());
+				
+			String body = renderTemplate("db/read.html", context);
+			return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, body);
+		} 
 		
 		throw new RuntimeException("Unknown URL: " + url);
 	}

@@ -1,10 +1,12 @@
-{% extends "db/base.html" %}
-
-{% block extrastyle %}
-{% endblock %}
+{% extends "db/editor.html" %}
 
 {% block content %}
 <div id="table_header" class="gradient">
+  <div class="buttons right">
+    <a href="#" class="small button destructive" id="delete_button">delete</a>
+    <a href="#" class="small button" id="edit_button">edit</a>
+  </div>
+
   <h2><a href="/db/">db</a> &gt; <a href="/db/{{ collection.name }}/">{{ collection.name }}</a> &gt; {{ record.id }}</h2>
 </div>
 
@@ -21,10 +23,33 @@
 
 <div id="table_footer" class="gradient">
   &nbsp;
+  <div class="buttons right">
+  </div>
 </div>
 
-</div>
-
-</div>
+<form id="delete_form" method="POST" action="/db/{{collection.name}}/{{record.id}}/delete/">
+  <input type="hidden" name="id" value="{{ record.id }}"></input>
+</form>
 
 {% endblock %}
+
+{% block extrascript %}
+<script>
+  $(document).ready(function(){
+    $("#edit_button").click(function(event){
+      event.preventDefault(); 
+      showEditor("Edit");
+    });
+
+    $("#delete_button").click(function(event){
+      if (confirm("Remove record?")){
+        $("#delete_form").submit();
+      }
+      event.preventDefault(); 
+    });
+  });
+</script>
+{% endblock %}
+
+
+

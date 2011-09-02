@@ -168,11 +168,11 @@ public abstract class DB {
 	public void deleteCollection(Collection collection){
 		if (collectionExists(collection.getName())){
 			try{
-				SQLiteStatement st = m_db.prepare("DELETE FROM collections where id = ?");
+				Statement st = m_connection.prepare("DELETE FROM collections where id = ?");
 				st.bind(1, collection.getId());
 				st.step();
 				
-				st = m_db.prepare("DELETE FROM records where collection = ?");
+				st = m_connection.prepare("DELETE FROM records where collection = ?");
 				st.bind(1, collection.getId());
 				st.step();
 			} catch (Throwable t){

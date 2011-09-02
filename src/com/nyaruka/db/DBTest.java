@@ -56,7 +56,7 @@ public class DBTest extends TestCase {
 	}
 	
 	public void testInvalidNames() throws Exception {
-		DB db = new DB();
+		DB db = new DevDB();
 		db.open();
 		db.init();
 		

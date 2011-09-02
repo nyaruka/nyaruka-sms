@@ -194,6 +194,11 @@ public class DB {
 	
 	public Collection ensureCollection(String name) {
 		if (!collectionExists(name)){
+			// validate the name is only alphanumiric
+			if (!name.matches("^[a-zA-Z0-9_]+$")){
+				throw new RuntimeException("Invalid collection name, collection names must be alphanumeric");
+			}
+			
 			try{
 				SQLiteStatement st = m_db.prepare("INSERT INTO collections VALUES(NULL, ?, " +
 												  "NULL, NULL, NULL, NULL, NULL, " +

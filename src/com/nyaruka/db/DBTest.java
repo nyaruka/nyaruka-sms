@@ -41,6 +41,35 @@ public class DBTest extends TestCase {
 		
 		// still gone
 		assertFalse(db.collectionExists("test"));
+		
+		// recreate it
+		Collection coll = db.ensureCollection("test");
+		assertTrue(db.collectionExists("test"));
+		
+		// remove it
+		db.deleteCollection(coll);
+		assertFalse(db.collectionExists("test"));
+		
+		// double delete shouldn't fail
+		db.deleteCollection(coll);
+	}
+	
+	public void testInvalidNames() throws Exception {
+		DB db = new DB();
+		db.open();
+		db.init();
+		
+		try{
+			db.ensureCollection("hello/world");
+			fail("Should have thrown due to invalid name");
+		} catch (Exception e){
+			e.printStackTrace();
+		}
+		
+		try{
+			db.ensureCollection("hello world");
+			fail("Should have thrown due to invalid name");
+		} catch (Exception e){}		
 	}
 	
 	public void testSavingTypes() throws Exception {
@@ -151,6 +180,11 @@ public class DBTest extends TestCase {
 		Record eric = col.save("{ name: 'Eric Newcomer', age: 32 }");
 		Record nic = col.save("{ name: 'Nic Pottier', age: 34 }");		
 		Record stevo = col.save("{ name: 'Steve Jobs', age: 55 }");
+
+		// create another collection to make sure we are filtering by collection
+		Collection col2 = db.ensureCollection("messages");
+		col2.save("{ text: 'can anybody hear me', number: '0788383382' }");
+		col2.save("{ text: 'is anybody out there', number: '0788383383' }");		
 		
 		// query for everybody over 50
 		Cursor cursor = col.find("{ age: 55 }");

@@ -1,16 +1,31 @@
 
 package com.nyaruka.db;
 
-public interface Connection {
+public abstract class Connection {
 
-	public void open(boolean b);
+	public abstract void open(boolean b);
 
-	public Statement prepare(String sql);
+	public abstract Statement query(String sql);
 	
-	public long getLastInsertId();
+	public abstract Statement prepare(String sql);
 	
-	public Connection exec(String sql);
+	public abstract void exec(String sql);
 	
-	public void dispose();
+	public abstract void dispose();
+	
+	public long insert(Statement statement) {
+		return statement.executeInsert();
+	}
+
+	public void update(Statement statement) {
+		statement.executeUpdate();		
+	}
+
+	public void exec(Statement statement) {
+		statement.execute();
+	}
+
+	
+
 
 }

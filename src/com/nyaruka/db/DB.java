@@ -319,9 +319,17 @@ public abstract class DB {
 				if (name != null){
 					if (data.has(name)){
 						Object value = data.get(name);
-						if (value != null && value instanceof Integer){
-							st.bind(i+3, (Integer) value);
-							set = true;
+						if (value != null){
+							if (value instanceof Integer){
+								st.bind(i+3, (Integer) value);
+								set = true;
+							} else {
+								try{
+									int intValue = Integer.parseInt(value.toString());
+									st.bind(i+3, intValue);
+									set = true;
+								} catch (Throwable t){}
+							}
 						}
 					}
 					if (!set){

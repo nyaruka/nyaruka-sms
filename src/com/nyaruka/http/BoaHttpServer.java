@@ -37,7 +37,7 @@ public class BoaHttpServer extends NanoHTTPD {
 				if (!params.containsKey("filename")) {
 					throw new IllegalArgumentException("The editor respectfully requests a file to edit.");
 				} else {
-					File file = new File("assets/apps/" + (String)params.get("filename"));
+					File file = new File("android/assets/apps/" + (String)params.get("filename"));
 					if (method.equals("POST")) {												
 						String contents = (String)params.getProperty("editor");
 						FileUtil.writeFile(file, contents);

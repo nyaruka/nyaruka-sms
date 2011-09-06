@@ -180,7 +180,7 @@ public class DBTest extends TestCase {
 		
 		Record eric = col.save("{ name: 'Eric Newcomer', age: 32 }");
 		Record nic = col.save("{ name: 'Nic Pottier', age: 34 }");		
-		Record stevo = col.save("{ name: 'Steve Jobs', age: 55 }");
+		Record stevo = col.save("{ name: 'Steve Jobs', age: \"55\" }");
 
 		// create another collection to make sure we are filtering by collection
 		Collection col2 = db.ensureCollection("messages");
@@ -194,6 +194,17 @@ public class DBTest extends TestCase {
 		assertTrue(cursor.hasNext());
 		assertTrue(cursor.hasNext());		
 		Record match = cursor.next(); 
+		assertEquals(stevo.getId(), match.getId());
+		assertFalse(cursor.hasNext());
+		assertFalse(cursor.hasNext());
+		
+		// query for everybody over 50
+		cursor = col.find("{ age: \"55\" }");
+		
+		assertEquals(1, cursor.count());
+		assertTrue(cursor.hasNext());
+		assertTrue(cursor.hasNext());		
+		match = cursor.next(); 
 		assertEquals(stevo.getId(), match.getId());
 		assertFalse(cursor.hasNext());
 		assertFalse(cursor.hasNext());

@@ -184,8 +184,10 @@ public class JSON {
 				Object o = jsonArray.get(i);			
 				if (o instanceof JSONArray) {
 					list.add(arrayToList((JSONArray)o));
-				} else {
+				} else if (o instanceof JSONObject){
 					list.add(new JSON((JSONObject) o).toMap());
+				} else {
+					list.add(o);
 				}
 			}
 			return list;

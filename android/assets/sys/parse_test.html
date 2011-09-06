@@ -1,0 +1,89 @@
+<html>
+ <head>
+  <title>Test Page for SmsParser</title>
+  <link rel="stylesheet" href="css/unittest.css" type="text/css">
+  <script language="javascript" src="js/jsunittest.js"></script>
+  <script language="javascript" src="js/smsparser.js"></script>
+ </head>
+ <body>
+  <div id="testlog"></div>
+
+  <script language="javascript">
+    new Test.Unit.Runner({
+
+    testStrings: function() { with(this) {
+      parser = new SmsParser("hello world");
+      assertEqual("hello", parser.nextString());
+      assertEqual("world", parser.nextString());
+
+      parser = new SmsParser(" hello   world  ");
+      assertEqual("hello", parser.nextString());
+      assertEqual("world", parser.nextString());
+      assertUndefined(parser.nextString());
+
+      parser = new SmsParser("hello 1 2  32");
+      assertEqual("hello", parser.nextString());
+      assertEqual("1", parser.nextString());
+      assertEqual("2", parser.nextString());
+      assertEqual("32", parser.nextString());
+      assertUndefined(parser.nextString());
+    }},
+
+    testInts: function(){ with(this){
+      parser = new SmsParser("hello 1 2  32");
+      assertEqual("hello", parser.nextString());
+      assertEqual(1, parser.nextInt());
+      assertEqual(2, parser.nextInt());
+      assertEqual(32, parser.nextInt());
+      assertUndefined(parser.nextInt());
+
+      parser = new SmsParser(" 1 2");
+      assertEqual(1, parser.nextInt());
+      assertEqual(2, parser.nextInt());
+      assertUndefined(parser.nextInt());    
+      
+      parser = new SmsParser("ten twenty");
+      assertUndefined(parser.nextInt());
+    }},
+
+    testMatches: function(){ with(this){
+      parser = new SmsParser("lab 10434");
+      assertEqual("lab", parser.nextString({ matches: "lab|result" }));
+      assertEqual(10434, parser.nextInt());
+      assertUndefined(parser.nextString());
+
+      parser = new SmsParser("result 10434");
+      assertEqual("result", parser.nextString({ matches: "lab|result" }));
+
+      parser = SmsParser("glad 10434");
+      assertUndefined(parser.nextString({ matches: "lab" }));
+    }},
+
+    testError: function(){ with(this){
+      parser = new SmsParser("lab 10434");
+      assertEqual("lab", parser.nextString({ matches: "lab|result", error: "Error, format must be lab [1 2 3]" }));
+      assertEqual(10434, parser.nextInt());
+      assertUndefined(parser.nextString());
+
+      parser = new SmsParser("glad 10434");
+      try{
+        parser.nextString({ matches: "lab|result", error: "Error, format must be lab [1 2 3]"});
+        fail("Should have thrown exception");
+      } catch (e){
+        assertEqual("Error, format must be lab [1 2 3]", e.error);
+        assertEqual("glad 10434", e.sms);
+      }
+
+      parser = new SmsParser("lab eminem");
+      assertEqual("lab", parser.nextString());
+      try{
+        parser.nextInt({ error: "Format must be lab [lab id]" });
+      } catch (e){
+        assertEqual("Format must be lab [lab id]", e.error);
+        assertEqual("lab eminem", e.sms);
+      }
+    }},
+  }); 
+  </script>
+ </body>
+</html>

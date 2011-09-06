@@ -9,6 +9,10 @@ function Cursor(cursor){
 	this.hasNext = function(){
 		return this.cursor.hasNext();
 	};
+    
+    this.count = function(){
+        return this.cursor.count();
+    };
 	
 	this.all = function(){
 		var items = [];

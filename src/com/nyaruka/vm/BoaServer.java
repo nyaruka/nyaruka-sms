@@ -101,7 +101,7 @@ public abstract class BoaServer {
 			return null;
 		} catch (IOException e) {
 			throw new RuntimeException(e);
-		}		
+		}
 	}
 
 	public String renderLog() {

@@ -34,8 +34,12 @@ public class AndroidStatement implements Statement {
 	@Override
 	public void bind(int index, String value) {
 		Log.d(TAG, "Binding " + index + " to " + value);
-		m_params[index-1] = value;
-		m_statement.bindString(index, value);
+		if (value == null) {
+			bindNull(index);
+		} else {
+			m_params[index-1] = value;
+			m_statement.bindString(index, value);
+		}
 	}
 
 	@Override
@@ -96,7 +100,9 @@ public class AndroidStatement implements Statement {
 		
 		for (int i=0; i<m_params.length; i++) {
 			Object p = m_params[i];
-			if (p instanceof Integer) {
+			if (p == null) {
+				replaced = replaced.replaceFirst("\\?", "null");
+			} else if (p instanceof Integer) {
 				replaced = replaced.replaceFirst("\\?", ((Integer)p).toString());
 			} else {
 				replaced = replaced.replaceFirst("\\?", "'" + p.toString() + "'");

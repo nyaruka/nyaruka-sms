@@ -1,5 +1,6 @@
 package com.nyaruka.db.dev;
 
+import com.almworks.sqlite4java.SQLiteConnection;
 import com.almworks.sqlite4java.SQLiteException;
 import com.almworks.sqlite4java.SQLiteStatement;
 import com.nyaruka.db.DBException;
@@ -7,7 +8,8 @@ import com.nyaruka.db.Statement;
 
 public class DevStatement implements Statement {
 
-	public DevStatement(SQLiteStatement st) {
+	public DevStatement(SQLiteConnection connection, SQLiteStatement st) {
+		m_connection = connection;
 		m_statement = st;
 	}
 	
@@ -103,13 +105,37 @@ public class DevStatement implements Statement {
 	}
 
 	@Override
-	public Object columnValue(int i) {
+	public long executeInsert() {
 		try {
-			return m_statement.columnValue(i);
+			m_statement.step();
+			return m_connection.getLastInsertId();
 		} catch (SQLiteException e) {
 			throw new DBException(e);
 		}
 	}
 
+
+	@Override
+	public void execute() {
+		try {
+			m_statement.step();
+		} catch (SQLiteException e) {
+			throw new DBException(e);
+		}
+	}
+
+	@Override
+	public void executeUpdate() {
+		execute();
+	}
+
+	@Override
+	public void executeQuery() {
+		execute();
+	}
+	
+	private SQLiteConnection m_connection;
 	private SQLiteStatement m_statement;
+	
+
 }

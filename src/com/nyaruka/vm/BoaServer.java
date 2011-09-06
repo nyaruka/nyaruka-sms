@@ -18,6 +18,7 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.asfun.jangod.base.Application;
 import net.asfun.jangod.template.TemplateEngine;
 
 import org.json.JSONArray;
@@ -36,7 +37,6 @@ import com.nyaruka.util.FileUtil;
 public abstract class BoaServer {
 
 	public BoaServer(int port, DB db) {
-		
 		try {
 			new BoaHttpServer(port, this);
 		} catch (Throwable t) {
@@ -126,6 +126,7 @@ public abstract class BoaServer {
 			data.put("error", stack.toString());
 			return m_templates.process("error.html", data);
 		} catch (Throwable t) {
+			t.printStackTrace();
 			throw new RuntimeException(t);
 		}		
 	}
@@ -266,7 +267,9 @@ public abstract class BoaServer {
 	}
 	
 	public void loadApps() {
-		for (BoaApp app : getApps()) {
+		List<BoaApp> apps = getApps();
+		log("Found " + apps.size() + " apps to load");
+		for (BoaApp app : apps) {
 			m_vm.addApp(app);
 			log("Added " + app.getNamespace() + " app");
 		}

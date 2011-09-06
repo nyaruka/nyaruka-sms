@@ -50,7 +50,7 @@ public abstract class DB {
 	private void exec(String sql){
 		Connection conn = null;
 		try{
-			conn = m_connection.exec(sql);
+			m_connection.exec(sql);
 		} catch (Throwable t){
 			throw new RuntimeException(t);
 		} finally {
@@ -194,7 +194,7 @@ public abstract class DB {
 												  "NULL, NULL, NULL, NULL, NULL, " +
 												  "NULL, NULL, NULL, NULL, NULL)");
 				st.bind(COLLECTION_NAME, name);
-				st.step();
+				st.executeInsert();
 			} catch (Throwable t){
 				throw new RuntimeException(t);
 			}
@@ -279,7 +279,7 @@ public abstract class DB {
 				}
 			}
 			
-			// add it to our clause
+			// add it to our clause		
 			sql += field + " " + OPERATORS.get(key) + " ?";
 			params.add(val);
 			delim = " AND ";
@@ -352,10 +352,11 @@ public abstract class DB {
 					st.bindNull(i+8);
 				}
 			}
-			
-			st.step();
+		
 			if (id == -1){
-				id = m_connection.getLastInsertId();
+				id = m_connection.insert(st);
+			} else {
+				m_connection.update(st);
 			}
 
 			return new Record(id, data);
@@ -387,6 +388,7 @@ public abstract class DB {
 			for (int i=0; i<params.size(); i++){
 				st.bind(i+1, params.get(i));
 			}
+			st.executeQuery();
 			st.step();
 			
 			int rowCount = st.columnInt(0); 

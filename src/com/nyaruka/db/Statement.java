@@ -2,6 +2,11 @@ package com.nyaruka.db;
 
 public interface Statement {
 
+	public long executeInsert();
+	public void executeUpdate();
+	public void executeQuery();
+	public void execute();
+	
 	public long columnLong(int recordId);
 	public String columnString(int recordData);
 	public boolean step();
@@ -12,6 +17,4 @@ public interface Statement {
 	public void bindNull(int i);
 	public int columnCount();
 	public String getColumnName(int i);
-	public Object columnValue(int i);
-
 }

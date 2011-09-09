@@ -53,6 +53,9 @@ public class BoaHttpServer extends NanoHTTPD {
 			else if (url.equals("/log")) {
 				return m_boa.renderLog();
 			}
+			else if (url.startsWith("/admin")) {
+				return m_boa.renderAdmin();
+			}
 			
 			if (url.startsWith("/")) {
 				url = url.substring(1);
@@ -112,7 +115,7 @@ public class BoaHttpServer extends NanoHTTPD {
 		try{
 			is = m_boa.getInputStream(uri);
 		} catch (Throwable t){
-			t.printStackTrace();
+			// t.printStackTrace();
 			return new Response(HTTP_NOTFOUND, MIME_PLAINTEXT, "Error 404, file not found.");
 		}
 		

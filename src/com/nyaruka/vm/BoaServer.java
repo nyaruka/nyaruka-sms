@@ -111,8 +111,9 @@ public abstract class BoaServer {
 		return renderToResponse("log.html", data);
 	}
 	
-	public String renderAdmin() {
-		return renderTemplate("admin.html", new HashMap<String,Object>());
+	public Response renderAdmin() {
+		HashMap<String,Object> context = getAdminContext();
+		return renderToResponse("index.html", context);
 	}
 	
 	public Response renderEditor(File file, String filename) {
@@ -258,7 +259,7 @@ public abstract class BoaServer {
 		try {
 			CharArrayWriter stack = new CharArrayWriter();
 			error.printStackTrace(new PrintWriter(stack));
-			HashMap<String, Object> context = new HashMap<String,Object>();
+			HashMap<String, Object> context = getAdminContext();
 			context.put("error", stack.toString());
 			return renderToResponse("error.html", context);
 		} catch (Throwable t) {

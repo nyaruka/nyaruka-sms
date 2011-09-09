@@ -1,40 +1,9 @@
-<html>
+{! extends "../base.html" !}
 
-<head>
-  <title>{% block title %}DB Browser{% endblock %}</title>
-  <link rel="stylesheet" href="/static/css/bootstrap-1.2.0.min.css" type="text/css">
-  <link rel="stylesheet" href="/static/css/db.css" type="text/css">
-  {% block extrastyle %}{% endblock %} 
-</head>
-<body>
+{% block extrastyle %}
+{% end block %}
 
-<div class="topbar">
-  <div class="topbar-inner">
-    <div class="container">
-      <h3><a href="/">BoaSMS</a></h3>
-      <ul class="nav">
-        <li class="dropdown"> 
-          <a href="#" class="dropdown-toggle">Collections</a> 
-          <ul class="dropdown-menu"> 
-            {% for collection in collections %}
-            <li><a href="/db/{{ collection.name }}/">{{ collection.name }}</a></li> 
-            {% endfor %}
-            <li class="divider"></li> 
-            <li><a href="/db/">All Collections</a></li> 
-          </ul> 
-        </li> 
-      </ul> 
-      {% block actions %}
-      {% endblock %}
-    </div>
-  </div>
-</div>
-
-<div class="container">
-{% block beforecontent %}
-{% endblock %}
-
-{% block content %}
+{% block actions %}
 {% endblock %}
 
 {% block aftercontent %}
@@ -71,29 +40,10 @@
 </form>
 {% endblock %}
 
-<script src="/static/js/jquery-1.6.2.min.js" type="text/javascript" charset="utf-8"></script>
-
 {% block extrascript %}
-{% endblock %}
-
 <script>
-  $("body").bind("click", function (e) {
-  $('.dropdown-toggle, .menu').parent("li").removeClass("open");
-  });
-  $(".dropdown-toggle, .menu").click(function (e) {
-  var $li = $(this).parent("li").toggleClass('open');
-  return false;
-  });
-</script>
 
-<script src="/static/js/jquery-1.6.2.min.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static/js/json2.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static/js/ace.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static/js/theme-twilight.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static/js/mode-json.js" type="text/javascript" charset="utf-8"></script>
-<script src="/static/js/beautify.js" type="text/javascript" charset="utf-8"></script>
 
-<script>
 var editor = null;
 
 function showEditor(title){
@@ -149,6 +99,8 @@ $(document).ready(function(){
   });
 });
 </script>
+
+{% endblock %}
 
 </body>
 

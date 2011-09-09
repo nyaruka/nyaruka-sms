@@ -159,8 +159,6 @@ public abstract class BoaServer {
 				m_vm.getDB().ensureCollection(params.getProperty("name"));
 			}
 			
-			HashMap<String, Object> context = new HashMap<String, Object>();
-			context.put("collections", m_vm.getDB().getCollections());
 			return renderToResponse("db/index.html", getAdminContext());
 		} 
 		
@@ -212,9 +210,8 @@ public abstract class BoaServer {
 				records.add(record.toJSON().toMap());
 			}
 			
-			HashMap<String, Object> context = new HashMap<String, Object>();
+			HashMap<String, Object> context = getAdminContext();
 			context.put("keys", keys);
-			context.put("collections", m_vm.getDB().getCollections());			
 			context.put("collection", coll);
 			context.put("records", records);
 			return renderToResponse("db/list.html", context);
@@ -253,13 +250,12 @@ public abstract class BoaServer {
 				fields.add(item_keys.next().toString());
 			}
 			
-			HashMap<String, Object> context = new HashMap<String, Object>();
+			HashMap<String, Object> context = getAdminContext();
 			context.put("collection", coll);
 			context.put("record", rec);
 			context.put("values", rec.toJSON().toMap());
 			context.put("fields", fields);
 			context.put("json", rec.getData().toString());
-			context.put("collections", m_vm.getDB().getCollections());						
 			return renderToResponse("db/read.html", context);
 		} 
 		

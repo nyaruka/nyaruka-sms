@@ -7,6 +7,8 @@ import java.util.Properties;
 
 import com.nyaruka.util.FileUtil;
 import com.nyaruka.vm.BoaServer;
+import com.nyaruka.vm.Session;
+import com.nyaruka.vm.SessionManager;
 
 /**
  * Root HTTP class, where the magic happens.
@@ -52,11 +54,12 @@ public class BoaHttpServer extends NanoHTTPD {
 		}
 		
 		try{
-		
 			m_boa.start();
-			
+			Session session = m_boa.initSession(request);
+			HttpResponse response = null;
+
 			if (url.startsWith("/db")){
-				return m_boa.renderDB(request);
+				response = m_boa.renderDB(request);
 			}
 			else if (url.equals("/edit")) {
 				if (!params.containsKey("filename")) {
@@ -66,24 +69,34 @@ public class BoaHttpServer extends NanoHTTPD {
 					if (method.equals("POST")) {												
 						String contents = (String)params.getProperty("editor");
 						FileUtil.writeFile(file, contents);
-						return new HttpResponse(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_PLAINTEXT, "OK");
+						response = new HttpResponse(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_PLAINTEXT, "OK");
 					} else {
-						return m_boa.renderEditor(file, params.getProperty("filename"));
+						response = m_boa.renderEditor(file, params.getProperty("filename"));
 					}
 				}
 			}
 			else if (url.equals("/log")) {
-				return m_boa.renderLog();
+				response = m_boa.renderLog(request);
 			}
 			else if (url.startsWith("/admin")) {
-				return m_boa.renderAdmin();
+				response = m_boa.renderAdmin(request);
 			}
 			
-			if (url.startsWith("/")) {
-				url = url.substring(1);
+			else {
+				if (url.startsWith("/")) {
+					url = url.substring(1);
+				}
+				response = m_boa.handleAppRequest(request);
 			}
-			return m_boa.handleAppRequest(request);
 			
+			// if our session is new, set our session cookie in our response
+			if (session.isNew()){
+				response.setCookie(SessionManager.SESSION_KEY, session.getKey());
+			}
+			// save the session if necessary
+			m_boa.saveSession(session);
+			
+			return response;
 		} catch (Throwable t){
 			t.printStackTrace();
 			return m_boa.renderError(t);			

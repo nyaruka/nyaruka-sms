@@ -142,6 +142,10 @@ public class JSON {
 		return m_o;
 	}
 	
+	public void remove(String name){
+		m_o.remove(name);
+	}
+	
 	public boolean has(String name){
 		return m_o.has(name);
 	}

@@ -18,7 +18,6 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.asfun.jangod.base.Application;
 import net.asfun.jangod.template.TemplateEngine;
 
 import org.json.JSONArray;
@@ -29,6 +28,8 @@ import com.nyaruka.db.Cursor;
 import com.nyaruka.db.DB;
 import com.nyaruka.db.Record;
 import com.nyaruka.http.BoaHttpServer;
+import com.nyaruka.http.HttpRequest;
+import com.nyaruka.http.HttpResponse;
 import com.nyaruka.http.NanoHTTPD;
 import com.nyaruka.http.NanoHTTPD.Response;
 import com.nyaruka.json.JSON;
@@ -79,10 +80,10 @@ public abstract class BoaServer {
 	}
 
 
-	public String handleRequest(String url, String method, Properties params) {		
+	public HttpResponse handleRequest(HttpRequest request){
 		try {
-			HttpRequest request = new HttpRequest(url, method, params);
-			HttpResponse response = m_vm.handleHttpRequest(request, m_requestInit);
+			BoaResponse response = m_vm.handleHttpRequest(request, m_requestInit);
+			String url = request.url();
 	
 			if (response != null) {
 					
@@ -95,10 +96,12 @@ public abstract class BoaServer {
 					templateFile = "/" + response.getApp().getNamespace() + "/" + templateFile;
 				}
 				
-				Map<String,Object> data = response.getData().toMap();				
-				return m_appTemplates.process(templateFile, data);
+				Map<String,Object> data = response.getData().toMap();
+				response.setBody(m_appTemplates.process(templateFile, data));
+				return response;
 			}
-			return null;
+	
+			return new HttpResponse(NanoHTTPD.HTTP_NOTFOUND, NanoHTTPD.MIME_HTML, "File not found: " + url);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}		
@@ -139,13 +142,17 @@ public abstract class BoaServer {
 		return renderTemplate("editor.html", data);
 	}
 
-	public Response renderDB(String url, String method, Properties params){
+	public HttpResponse renderDB(HttpRequest request){
 		Pattern COLL = Pattern.compile("^/db/([a-zA-Z]+)/$");
 		Pattern RECORD = Pattern.compile("^/db/([a-zA-Z]+)/(\\d+)/$");
 		Pattern DELETE_RECORD = Pattern.compile("^/db/([a-zA-Z]+)/(\\d+)/delete/$");		
 		Pattern DELETE_COLLECTION = Pattern.compile("^/db/([a-zA-Z]+)/delete/$");				
 		
 		Matcher matcher = null;
+	
+		String url = request.url();
+		Properties params = request.params();
+		String method = request.method();
 		
 		if (url.equals("/db") || url.equals("/db/")){
 			if (method.equalsIgnoreCase("POST")){
@@ -154,7 +161,7 @@ public abstract class BoaServer {
 			
 			HashMap<String, Object> context = new HashMap<String, Object>();
 			context.put("collections", m_vm.getDB().getCollections());
-			return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, renderTemplate("db/index.html", context)); 
+			return new HttpResponse(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, renderTemplate("db/index.html", context)); 
 		} 
 		
 		matcher = DELETE_COLLECTION.matcher(url);
@@ -163,8 +170,8 @@ public abstract class BoaServer {
 			Collection coll = m_vm.getDB().getCollection(collName);
 			m_vm.getDB().deleteCollection(coll);
 			
-			Response resp = new Response(NanoHTTPD.HTTP_REDIRECT, NanoHTTPD.MIME_PLAINTEXT, "/db/");
-			resp.header.put("Location", "/db/");
+			HttpResponse resp = new HttpResponse(NanoHTTPD.HTTP_REDIRECT, NanoHTTPD.MIME_PLAINTEXT, "/db/");
+			resp.addHeader("Location", "/db/");
 			return resp;
 		}
 		
@@ -214,7 +221,7 @@ public abstract class BoaServer {
 			context.put("collection", coll);
 			context.put("records", records);
 			String body = renderTemplate("db/list.html", context);
-			return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, body);
+			return new HttpResponse(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, body);
 		}
 		
 		matcher = DELETE_RECORD.matcher(url);
@@ -225,8 +232,8 @@ public abstract class BoaServer {
 			Record rec = coll.getRecord(id);
 			
 			coll.delete(id);
-			Response resp = new Response(NanoHTTPD.HTTP_REDIRECT, NanoHTTPD.MIME_PLAINTEXT, "/db/" + coll.getName() + "/");
-			resp.header.put("Location", "/db/" + coll.getName() + "/");
+			HttpResponse resp = new HttpResponse(NanoHTTPD.HTTP_REDIRECT, NanoHTTPD.MIME_PLAINTEXT, "/db/" + coll.getName() + "/");
+			resp.addHeader("Location", "/db/" + coll.getName() + "/");
 			return resp;
 		}
 		
@@ -262,7 +269,7 @@ public abstract class BoaServer {
 			context.put("collections", m_vm.getDB().getCollections());						
 				
 			String body = renderTemplate("db/read.html", context);
-			return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, body);
+			return new HttpResponse(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, body);
 		} 
 		
 		throw new RuntimeException("Unknown URL: " + url);

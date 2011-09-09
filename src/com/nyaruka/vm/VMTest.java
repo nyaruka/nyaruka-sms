@@ -9,6 +9,7 @@ import junit.framework.TestCase;
 
 import com.nyaruka.db.Collection;
 import com.nyaruka.db.dev.DevDB;
+import com.nyaruka.http.HttpRequest;
 import com.nyaruka.json.JSON;
 import com.nyaruka.util.FileUtil;
 
@@ -33,7 +34,7 @@ public class VMTest extends TestCase {
 		
 		assertNull(vm.getRouter().lookupHttpHandler("foo"));
 		
-		HttpRequest request = new HttpRequest("hello", "GET", new Properties());
+		HttpRequest request = new HttpRequest("hello", "GET", new Properties(), new Properties());
 		assertNull(vm.handleHttpRequest(request, getRequestInit()));
 	}
 	
@@ -59,8 +60,8 @@ public class VMTest extends TestCase {
 		List<JSEval> evals = getEvals();
 		vm.start(evals);
 		
-		HttpRequest request = new HttpRequest("hello", "GET", new Properties());
-		HttpResponse response = vm.handleHttpRequest(request, getRequestInit());
+		HttpRequest request = new HttpRequest("hello", "GET", new Properties(), new Properties());
+		BoaResponse response = vm.handleHttpRequest(request, getRequestInit());
 		assertEquals("original\n", vm.getLog().toString());
 		
 		vm.getLog().setLength(0);
@@ -93,8 +94,8 @@ public class VMTest extends TestCase {
 		assertNotNull(vm.getRouter().lookupHttpHandler("hello"));
 		
 		// try calling the handler
-		HttpRequest request = new HttpRequest("hello", "GET", new Properties());
-		HttpResponse response = vm.handleHttpRequest(request, getRequestInit());
+		HttpRequest request = new HttpRequest("hello", "GET", new Properties(), new Properties());
+		BoaResponse response = vm.handleHttpRequest(request, getRequestInit());
 		
 		assertNotNull(response);
 		assertEquals("{\"hello\":\"world\"}", response.getData().toString());
@@ -117,8 +118,8 @@ public class VMTest extends TestCase {
 		vm.addApp(app);
 		vm.start(getEvals());
 		
-		HttpRequest request = new HttpRequest("hello", "GET", new Properties());
-		HttpResponse response = vm.handleHttpRequest(request, getRequestInit());
+		HttpRequest request = new HttpRequest("hello", "GET", new Properties(), new Properties());
+		BoaResponse response = vm.handleHttpRequest(request, getRequestInit());
 		
 		JSON d = response.getData();
 		assertEquals(true, d.getBoolean("bool")); 
@@ -142,8 +143,8 @@ public class VMTest extends TestCase {
 		vm.addApp(app);
 		vm.start(getEvals());
 		
-		HttpRequest request = new HttpRequest("hello", "GET", new Properties());
-		HttpResponse response = vm.handleHttpRequest(request, getRequestInit());
+		HttpRequest request = new HttpRequest("hello", "GET", new Properties(), new Properties());
+		BoaResponse response = vm.handleHttpRequest(request, getRequestInit());
 		assertNotNull(response);
 		assertEquals("{\"test\":8}", response.getData().toString());
 	}
@@ -165,8 +166,8 @@ public class VMTest extends TestCase {
 		Properties params = new Properties();
 		params.put("name", "Eric Newcomer");
 		//params.put("age", "32");
-		HttpRequest request = new HttpRequest("/contacts/add", "GET", params);
-		HttpResponse response = vm.handleHttpRequest(request, getRequestInit());
+		HttpRequest request = new HttpRequest("/contacts/add", "GET", new Properties(), params);
+		BoaResponse response = vm.handleHttpRequest(request, getRequestInit());
 		
 		assertNotNull(response);
 		

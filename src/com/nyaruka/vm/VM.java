@@ -10,6 +10,7 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ScriptableObject;
 
 import com.nyaruka.db.DB;
+import com.nyaruka.http.HttpRequest;
 import com.nyaruka.vm.Router.HttpRoute;
 
 /**
@@ -87,7 +88,7 @@ public class VM {
 	 * @return HttpResponse if this app handles this request, null otherwise
 	 * @throws RuntimeException if an error occurs running the handler
 	 */
-	public HttpResponse handleHttpRequest(HttpRequest request, JSEval requestInit){
+	public BoaResponse handleHttpRequest(HttpRequest request, JSEval requestInit){
 		HttpRoute route = m_router.lookupHttpHandler(request.url());
 		
 		// no route found?  then this app doesn't deal with this, return null
@@ -95,7 +96,7 @@ public class VM {
 			return null;
 		}
 
-		HttpResponse response = new HttpResponse(route.getApp());
+		BoaResponse response = new BoaResponse(route.getApp());
 		LoggingWrapper logWrapper = new LoggingWrapper(m_log);
 		
 		ScriptableObject.putProperty(m_scope, "router", m_router);

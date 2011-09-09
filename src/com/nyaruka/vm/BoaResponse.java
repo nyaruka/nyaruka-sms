@@ -2,6 +2,7 @@ package com.nyaruka.vm;
 
 import org.json.JSONArray;
 
+import com.nyaruka.http.HttpResponse;
 import com.nyaruka.json.JSON;
 
 /**
@@ -9,9 +10,9 @@ import com.nyaruka.json.JSON;
  * 
  * @author nicp
  */
-public class HttpResponse {
+public class BoaResponse extends HttpResponse {
 
-	public HttpResponse(BoaApp app) {
+	public BoaResponse(BoaApp app) {
 		m_app = app;
 	}
 

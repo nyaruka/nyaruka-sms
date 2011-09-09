@@ -13,8 +13,10 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Vector;
 import java.util.Hashtable;
 import java.util.Locale;
@@ -166,6 +168,13 @@ public class NanoHTTPD
 			header.put( name, value );
 		}
 
+		public void addCookie(String cookie){
+			if (cookies == null){
+				cookies = new ArrayList<String>();
+			}
+			cookies.add(cookie);
+		}
+		
 		/**
 		 * HTTP status code after processing, e.g. "200 OK", HTTP_OK
 		 */
@@ -180,6 +189,9 @@ public class NanoHTTPD
 		 * Data of the response, may be null.
 		 */
 		public InputStream data;
+		
+		/** Our cookies for this response, stored in the same format as sent */
+		public ArrayList<String> cookies;
 
 		/**
 		 * Headers for the HTTP response. Use addHeader()
@@ -337,7 +349,7 @@ public class NanoHTTPD
 				decodeHeader(hin, pre, parms, header);
 				String method = pre.getProperty("method");
 				String uri = pre.getProperty("uri");
-
+				
 				long size = 0x7FFFFFFFFFFFFFFFl;
 				String contentLength = header.getProperty("content-length");
 				if (contentLength != null)
@@ -438,7 +450,7 @@ public class NanoHTTPD
 				if ( r == null )
 					sendError( HTTP_INTERNALERROR, "SERVER INTERNAL ERROR: Serve() returned a null response." );
 				else
-					sendResponse( r.status, r.mimeType, r.header, r.data );
+					sendResponse( r.status, r.mimeType, r.header, r.cookies, r.data );
 
 				in.close();
 				is.close();
@@ -738,14 +750,14 @@ public class NanoHTTPD
 		 */
 		private void sendError( String status, String msg ) throws InterruptedException
 		{
-			sendResponse( status, MIME_PLAINTEXT, null, new ByteArrayInputStream( msg.getBytes()));
+			sendResponse( status, MIME_PLAINTEXT, null, null, new ByteArrayInputStream( msg.getBytes()));
 			throw new InterruptedException();
 		}
 
 		/**
 		 * Sends given response to the socket.
 		 */
-		private void sendResponse( String status, String mime, Properties header, InputStream data )
+		private void sendResponse( String status, String mime, Properties header, List<String> cookies, InputStream data )
 		{
 			try
 			{
@@ -770,6 +782,13 @@ public class NanoHTTPD
 						String key = (String)e.nextElement();
 						String value = header.getProperty( key );
 						pw.print( key + ": " + value + "\r\n");
+					}
+				}
+
+				// output any cookies we have
+				if (cookies != null){
+					for(String cookie : cookies){
+						pw.print("Set-Cookie: " + cookie + "\r\n");
 					}
 				}
 

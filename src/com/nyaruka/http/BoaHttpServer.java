@@ -20,18 +20,40 @@ public class BoaHttpServer extends NanoHTTPD {
 		m_boa = boa;
 	}
 	
-	public synchronized Response serve( String url, String method, Properties header, Properties params, Properties files ){
-		
+	public synchronized Response serve(String url, String method, Properties headers, Properties params, Properties files){
 		m_boa.log(method + " " + url);
+		HttpRequest httpRequest = new HttpRequest(url, method, headers, params);
+		
+		HttpResponse httpResponse = serve(httpRequest);
+		Response response = new Response(httpResponse.getStatus(), httpResponse.getMimeType(), httpResponse.getBody());
+		for(Object key : httpResponse.getHeaders().keySet()){
+			response.addHeader((String) key, httpResponse.getHeader((String) key));
+		}
+		
+		// add our cookie header
+		if (httpResponse.hasCookies()){
+			for (Object key : httpResponse.getCookies().keySet()){
+				response.addCookie(httpResponse.getCookieString((String)key));
+			}
+		}
+		
+		return response;
+	}
+	
+	public synchronized HttpResponse serve(HttpRequest request){
+		String url = request.url();
+		m_boa.log(request.method() + " " + url);
+		Properties params = request.params();
+		String method = request.method();
 		
 		try{
 			m_boa.start();
 			
 			if (url.indexOf('.') > -1){
-				return serveFile(url, header);			
+				return serveFile(request);
 			}
 			else if (url.startsWith("/db")){
-				return m_boa.renderDB(url, method, params);
+				return m_boa.renderDB(request);
 			}
 			else if (url.equals("/edit")) {
 				if (!params.containsKey("filename")) {
@@ -41,15 +63,15 @@ public class BoaHttpServer extends NanoHTTPD {
 					if (method.equals("POST")) {												
 						String contents = (String)params.getProperty("editor");
 						FileUtil.writeFile(file, contents);
-						return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_PLAINTEXT, "OK");
+						return new HttpResponse(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_PLAINTEXT, "OK");
 					} else {
 						String editor = m_boa.renderEditor(file, params.getProperty("filename"));
-						return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, editor);
+						return new HttpResponse(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, editor);
 					}
 				}
 			}
 			else if (url.equals("/log")) {
-				return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, m_boa.renderLog());
+				return new HttpResponse(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, m_boa.renderLog());
 				
 			}
 			
@@ -57,15 +79,10 @@ public class BoaHttpServer extends NanoHTTPD {
 				url = url.substring(1);
 			}
 			
-			String html = m_boa.handleRequest(url, method, params);			
-			if (html != null){
-				return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, html);				
-			} else {
-				return new Response(NanoHTTPD.HTTP_NOTFOUND, NanoHTTPD.MIME_HTML, "File not found: " + url);
-			}
+			return m_boa.handleRequest(request);
 		} catch (Throwable t){
 			t.printStackTrace();
-			return new Response(NanoHTTPD.HTTP_INTERNALERROR, NanoHTTPD.MIME_HTML, m_boa.renderError(t));			
+			return new HttpResponse(NanoHTTPD.HTTP_INTERNALERROR, NanoHTTPD.MIME_HTML, m_boa.renderError(t));			
 		} finally {
 			try {
 				m_boa.stop();
@@ -91,8 +108,10 @@ public class BoaHttpServer extends NanoHTTPD {
 	 * Serves file from homeDir and its' subdirectories (only).
 	 * Uses only URI, ignores all headers and HTTP parameters.
 	 */
-	public Response serveFile(String uri, Properties header){
-		Response res = null;
+	public HttpResponse serveFile(HttpRequest request){
+		HttpResponse res = null;
+		String uri = request.url();
+		Properties headers = request.headers();
 
 		if (res == null) {
 			// Remove URL arguments
@@ -103,7 +122,7 @@ public class BoaHttpServer extends NanoHTTPD {
 
 			// Prohibit getting out of current directory
 			if (uri.startsWith("..") || uri.endsWith("..") || uri.indexOf("../") >= 0) {
-				res = new Response(HTTP_FORBIDDEN, MIME_PLAINTEXT, "FORBIDDEN: Won't serve ../ for security reasons.");
+				res = new HttpResponse(HTTP_FORBIDDEN, MIME_PLAINTEXT, "FORBIDDEN: Won't serve ../ for security reasons.");
 			}
 		}
 
@@ -116,7 +135,7 @@ public class BoaHttpServer extends NanoHTTPD {
 			is = m_boa.getInputStream(uri);
 		} catch (Throwable t){
 			t.printStackTrace();
-			return new Response(HTTP_NOTFOUND, MIME_PLAINTEXT, "Error 404, file not found.");
+			return new HttpResponse(HTTP_NOTFOUND, MIME_PLAINTEXT, "Error 404, file not found.");
 		}
 		
 		try {
@@ -137,7 +156,7 @@ public class BoaHttpServer extends NanoHTTPD {
 				// Support (simple) skipping:
 				long startFrom = 0;
 				long endAt = -1;
-				String range = header.getProperty("range");
+				String range = headers.getProperty("range");
 				if (range != null) {
 					if (range.startsWith("bytes=")) {
 						range = range.substring("bytes=".length());
@@ -157,7 +176,7 @@ public class BoaHttpServer extends NanoHTTPD {
 				long fileLen = is.available();
 				if (range != null && startFrom >= 0) {
 					if (startFrom >= fileLen) {
-						res = new Response(HTTP_RANGE_NOT_SATISFIABLE, MIME_PLAINTEXT, "");
+						res = new HttpResponse(HTTP_RANGE_NOT_SATISFIABLE, MIME_PLAINTEXT, "");
 						res.addHeader("Content-Range", "bytes 0-0/" + fileLen);
 						//res.addHeader("ETag", etag);
 					} else {
@@ -172,19 +191,19 @@ public class BoaHttpServer extends NanoHTTPD {
 						final long dataLen = newLen;
 						is.skip(startFrom);
 
-						res = new Response(HTTP_PARTIALCONTENT, mime, is);
+						res = new HttpResponse(HTTP_PARTIALCONTENT, mime, is);
 						res.addHeader("Content-Length", "" + dataLen);
 						res.addHeader("Content-Range", "bytes " + startFrom	+ "-" + endAt + "/" + fileLen);
 						//res.addHeader("ETag", etag);
 					}
 				} else {
-					res = new Response(HTTP_OK, mime, is);
+					res = new HttpResponse(HTTP_OK, mime, is);
 					res.addHeader("Content-Length", "" + is.available());
 					//res.addHeader("ETag", etag);
 				}
 			}
 		} catch (IOException ioe) {
-			res = new Response(HTTP_FORBIDDEN, MIME_PLAINTEXT, "FORBIDDEN: Reading file failed.");
+			res = new HttpResponse(HTTP_FORBIDDEN, MIME_PLAINTEXT, "FORBIDDEN: Reading file failed.");
 		}
 
 		res.addHeader("Accept-Ranges", "bytes"); // Announce that the file server accepts partial content requests

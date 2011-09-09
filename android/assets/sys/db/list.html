@@ -1,44 +1,43 @@
-{% extends "db/editor.html" %}
+{% extends "db/base.html" %}
+
+{% block actions %}
+<ul class="secondary-nav">
+  <li class="dropdown"> 
+    <a href="#" class="dropdown-toggle">Actions</a> 
+    <ul class="dropdown-menu">
+      <li><a href="#" id="add_button">Add Record</a></li>
+      <li><a href="#" id="delete_button">Delete Collection</a></li>
+    </ul>
+  </li> 
+</ul>
+{% endblock %}
 
 {% block content %}
-<div id="table_container">
-
-<div id="table_header" class="gradient">
-  <div class="buttons right">
-    <a href="#" id="delete_button" class="button small destructive">delete</a>
-    <a href="#" id="add_button" class="button small">add</a>
-  </div>
-
-  <h2><a href="/db/">db</a> &gt; {{ collection.name }}</h2>
+<div class="page-header">
+  <h1>{{ collection.name }}</h1>
 </div>
 
-<div id="table_contents">
-<table width="100%" cellspacing=0 cellpadding=0>
-<tr>
-  <th width="40">id</th>
-  {% for key in keys %}
-  <th>{{ key }}</th>
-  {% endfor %}
-</tr>
+<table class="zebra-striped">
+  <thead>
+    <tr>
+      <th width="40">id</th>
+      {% for key in keys %}
+      <th>{{ key }}</th>
+      {% endfor %}
+    </tr>
+  </thead>
 
-{% for record in records %}
-<tr class="record_row {% cycle 'row1','row2' %}" record_id="{{ record.id }}">
-  <td>{{ record.id }}</td>
-  {% for key in keys %}
-  <td>{{ record|get:key }}</td>
-  {% endfor %}
-</tr>
-{% endfor %}
-
+  <tbody>
+    {% for record in records %}
+    <tr class="record_row {% cycle 'row1','row2' %}" record_id="{{ record.id }}">
+      <td>{{ record.id }}</td>
+      {% for key in keys %}
+      <td>{{ record|get:key }}</td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
-
-<div id="table_footer" class="gradient">
-  <h2>
-    {{ records|length }} records
-  </h2>
-</div>
-
-</div>
 
 <form id="delete_form" method="POST" action="/db/{{collection.name}}/delete/">
 </form>
@@ -53,7 +52,7 @@
 
     $("#add_button").click(function(event){
       event.preventDefault(); 
-      showEditor("Add");
+      showEditor("Add Record");
     });
 
     $("#delete_button").click(function(event){

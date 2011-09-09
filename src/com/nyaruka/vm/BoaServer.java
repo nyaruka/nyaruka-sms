@@ -210,6 +210,7 @@ public abstract class BoaServer {
 			
 			HashMap<String, Object> context = new HashMap<String, Object>();
 			context.put("keys", keys);
+			context.put("collections", m_vm.getDB().getCollections());			
 			context.put("collection", coll);
 			context.put("records", records);
 			String body = renderTemplate("db/list.html", context);
@@ -258,6 +259,7 @@ public abstract class BoaServer {
 			context.put("values", rec.toJSON().toMap());
 			context.put("fields", fields);
 			context.put("json", rec.getData().toString());
+			context.put("collections", m_vm.getDB().getCollections());						
 				
 			String body = renderTemplate("db/read.html", context);
 			return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, body);

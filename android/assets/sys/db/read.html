@@ -1,31 +1,32 @@
-{% extends "db/editor.html" %}
+{% extends "db/base.html" %}
+
+{% block actions %}
+<ul class="secondary-nav">
+  <li class="dropdown"> 
+    <a href="#" class="dropdown-toggle">Actions</a> 
+    <ul class="dropdown-menu">
+      <li><a href="#" id="edit_button">Edit Record</a></li>
+      <li><a href="#" id="delete_button">Delete Record</a></li>
+    </ul>
+  </li> 
+</ul>
+{% endblock %}
 
 {% block content %}
-<div id="table_header" class="gradient">
-  <div class="buttons right">
-    <a href="#" class="small button destructive" id="delete_button">delete</a>
-    <a href="#" class="small button" id="edit_button">edit</a>
-  </div>
-
-  <h2><a href="/db/">db</a> &gt; <a href="/db/{{ collection.name }}/">{{ collection.name }}</a> &gt; {{ record.id }}</h2>
+<div class="page-header">
+  <h1><a href="/db/{{ collection.name }}/">{{ collection.name }}</a> &gt; {{ record.id }}</h1>
 </div>
 
-<div id="table_contents">
-<table width="100%" cellspacing=0 cellpadding=0>
-  {% for field in fields %}
-  <tr>
-    <td class="field_label">{{ field }}</td>
-    <td>{{ values|get:field }}</td>
-  </tr>
-  {% endfor %}
+<table>
+  <tbody>
+    {% for field in fields %}
+    <tr>
+      <td class="field_label">{{ field }}</td>
+      <td>{{ values|get:field }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
-</div>
-
-<div id="table_footer" class="gradient">
-  &nbsp;
-  <div class="buttons right">
-  </div>
-</div>
 
 <form id="delete_form" method="POST" action="/db/{{collection.name}}/{{record.id}}/delete/">
   <input type="hidden" name="id" value="{{ record.id }}"></input>
@@ -38,7 +39,7 @@
   $(document).ready(function(){
     $("#edit_button").click(function(event){
       event.preventDefault(); 
-      showEditor("Edit");
+      showEditor("Edit Record");
     });
 
     $("#delete_button").click(function(event){

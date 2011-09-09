@@ -384,12 +384,11 @@ public abstract class DB {
 			
 			// calculate our # of matches first
 			Statement st = m_connection.prepare("SELECT count(id) " + 
-											  "from records" + whereClause);
+					"from records" + whereClause);
 			for (int i=0; i<params.size(); i++){
 				st.bind(i+1, params.get(i));
 			}
 			st.executeQuery();
-			st.step();
 			
 			int rowCount = st.columnInt(0); 
 			

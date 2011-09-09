@@ -3,38 +3,46 @@
 {% block extrastyle %}
 {% endblock %}
 
+{% block actions %}
+<ul class="secondary-nav">
+  <li class="dropdown"> 
+    <a href="#" class="dropdown-toggle">Actions</a> 
+    <ul class="dropdown-menu">
+      <li><a href="#" class="add_button">Add Collection</a></li>
+    </ul>
+  </li> 
+</ul>
+{% endblock %}
+
 {% block content %}
-<div id="table_container">
+<div class="page-header">
+  <h1>Collections</h1>
+</div>
 
-<div id="table_header" class="gradient">
-  <div class="buttons right">
-    <a href="#" class="small button" id="add_button">add</a>
+<div class="row">
+  <div class="span10 columns">
+    <table class="zebra-striped">
+      <thead>
+        <tr>
+          <th>name</th>
+          <th width="80" class="tright">size</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for collection in collections %}
+        <tr class="collection_row" name="{{ collection.name }}">
+          <td>{{ collection.name }}</td>
+          <td class="tright">{{ collection.size }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
-  <h2>dbs</h2>
-</div>
-
-<div id="table_contents">
-<table width="100%" cellspacing=0 cellpadding=0>
-<tr>
-  <th>name</th>
-  <th>size</th>
-</tr>
-
-{% for collection in collections %}
-<tr class="collection_row {% cycle 'row1','row2' %}" name="{{ collection.name }}">
-  <td>{{ collection.name }}</td>
-  <td>{{ collection.size }}</td>
-</tr>
-{% endfor %}
-
-</table>
-
-<div id="table_footer" class="gradient">
-  <h2>
-    {{ collections|length }} collections
-  </h2>
-</div>
-
+  <div class="span6 columns">
+    <h2>JSON Documents</h2>
+    <p>Collections let you store the data you care about, in the simplest format possible, json.</p>
+    <p>You can specify the indexes you want on each index to allow for querying of your document colleciton.</p>
+  </div>
 </div>
 
 <form id="add_form" method="POST">
@@ -51,7 +59,7 @@
     });
 
 
-    $("#add_button").click(function(event){
+    $(".add_button").click(function(event){
       event.preventDefault();
       var name = prompt("Enter new collection name:");
       if (name){

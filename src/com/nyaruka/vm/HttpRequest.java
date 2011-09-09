@@ -8,7 +8,7 @@ import java.util.Properties;
  * @author nicp
  */
 public class HttpRequest {
-
+	
 	public HttpRequest(String url, String method, Properties params){
 		m_url = url;
 		m_method = method;

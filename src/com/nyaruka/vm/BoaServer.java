@@ -1,10 +1,7 @@
 package com.nyaruka.vm;
 
 import java.io.CharArrayWriter;
-
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -18,7 +15,6 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.asfun.jangod.base.Application;
 import net.asfun.jangod.template.TemplateEngine;
 
 import org.json.JSONArray;
@@ -78,8 +74,7 @@ public abstract class BoaServer {
 		m_vm.getLog().append(message).append("\n");
 	}
 
-
-	public String handleRequest(String url, String method, Properties params) {		
+	public Response handleAppRequest(String url, String method, Properties params) {		
 		try {
 			HttpRequest request = new HttpRequest(url, method, params);
 			HttpResponse response = m_vm.handleHttpRequest(request, m_requestInit);
@@ -96,7 +91,13 @@ public abstract class BoaServer {
 				}
 				
 				Map<String,Object> data = response.getData().toMap();				
-				return m_appTemplates.process(templateFile, data);
+				String html = m_appTemplates.process(templateFile, data);
+				
+				if (html != null){
+					return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, html);				
+				} else {
+					return new Response(NanoHTTPD.HTTP_NOTFOUND, NanoHTTPD.MIME_HTML, "File not found: " + url);
+				}			
 			}
 			return null;
 		} catch (IOException e) {
@@ -104,39 +105,22 @@ public abstract class BoaServer {
 		}
 	}
 
-	public String renderLog() {
+	public Response renderLog() {
 		HashMap<String,Object> data = new HashMap<String,Object>();
 		data.put("log", m_vm.getLog().toString());
-		return renderTemplate("log.html", data);
-	}
-
-	public String renderTemplate(String filename, Map<String,Object> data) {
-		try {
-			return m_templates.process(filename, data);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public String renderError(Throwable error) {		
-		try {
-			CharArrayWriter stack = new CharArrayWriter();
-			error.printStackTrace(new PrintWriter(stack));
-			HashMap<String, Object> data = new HashMap<String,Object>();
-			data.put("error", stack.toString());
-			return m_templates.process("error.html", data);
-		} catch (Throwable t) {
-			t.printStackTrace();
-			throw new RuntimeException(t);
-		}		
+		return renderToResponse("log.html", data);
 	}
 	
-	public String renderEditor(File file, String filename) {
+	public String renderAdmin() {
+		return renderTemplate("admin.html", new HashMap<String,Object>());
+	}
+	
+	public Response renderEditor(File file, String filename) {
 		String fileContents = FileUtil.slurpFile(file);
 		Map<String,Object> data = new HashMap<String,Object>();
 		data.put("contents", fileContents);		
 		data.put("filename", filename);
-		return renderTemplate("editor.html", data);
+		return renderToResponse("editor.html", data);
 	}
 
 	public Response renderDB(String url, String method, Properties params){
@@ -152,9 +136,7 @@ public abstract class BoaServer {
 				m_vm.getDB().ensureCollection(params.getProperty("name"));
 			}
 			
-			HashMap<String, Object> context = new HashMap<String, Object>();
-			context.put("collections", m_vm.getDB().getCollections());
-			return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, renderTemplate("db/index.html", context)); 
+			return renderToResponse("db/index.html", getAdminContext()); 
 		} 
 		
 		matcher = DELETE_COLLECTION.matcher(url);
@@ -162,10 +144,7 @@ public abstract class BoaServer {
 			String collName = matcher.group(1);
 			Collection coll = m_vm.getDB().getCollection(collName);
 			m_vm.getDB().deleteCollection(coll);
-			
-			Response resp = new Response(NanoHTTPD.HTTP_REDIRECT, NanoHTTPD.MIME_PLAINTEXT, "/db/");
-			resp.header.put("Location", "/db/");
-			return resp;
+			return redirect("/db/");
 		}
 		
 		matcher = COLL.matcher(url);
@@ -213,8 +192,7 @@ public abstract class BoaServer {
 			context.put("collections", m_vm.getDB().getCollections());			
 			context.put("collection", coll);
 			context.put("records", records);
-			String body = renderTemplate("db/list.html", context);
-			return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, body);
+			return renderToResponse("db/list.html", context);
 		}
 		
 		matcher = DELETE_RECORD.matcher(url);
@@ -222,12 +200,9 @@ public abstract class BoaServer {
 			String collName = matcher.group(1);
 			Collection coll = m_vm.getDB().getCollection(collName);
 			long id = Long.parseLong(matcher.group(2));
-			Record rec = coll.getRecord(id);
-			
+			Record rec = coll.getRecord(id);			
 			coll.delete(id);
-			Response resp = new Response(NanoHTTPD.HTTP_REDIRECT, NanoHTTPD.MIME_PLAINTEXT, "/db/" + coll.getName() + "/");
-			resp.header.put("Location", "/db/" + coll.getName() + "/");
-			return resp;
+			return redirect("/db/" + coll.getName() + "/");
 		}
 		
 		matcher = RECORD.matcher(url);
@@ -259,10 +234,9 @@ public abstract class BoaServer {
 			context.put("values", rec.toJSON().toMap());
 			context.put("fields", fields);
 			context.put("json", rec.getData().toString());
-			context.put("collections", m_vm.getDB().getCollections());						
-				
-			String body = renderTemplate("db/read.html", context);
-			return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, body);
+			context.put("collections", m_vm.getDB().getCollections());
+			
+			return renderToResponse("db/read.html", context);
 		} 
 		
 		throw new RuntimeException("Unknown URL: " + url);
@@ -278,6 +252,22 @@ public abstract class BoaServer {
 	}
 	
 	/**
+	 * Render an exception nicely in our error template
+	 */
+	public Response renderError(Throwable error) {		
+		try {
+			CharArrayWriter stack = new CharArrayWriter();
+			error.printStackTrace(new PrintWriter(stack));
+			HashMap<String, Object> context = new HashMap<String,Object>();
+			context.put("error", stack.toString());
+			return renderToResponse("error.html", context);
+		} catch (Throwable t) {
+			t.printStackTrace();
+			throw new RuntimeException(t);
+		}		
+	}
+	
+	/**
 	 * Read the contents of the file at the given path
 	 */
 	public String readFile(String path) {
@@ -285,7 +275,45 @@ public abstract class BoaServer {
 		return FileUtil.slurpStream(is);
 	}
 
-		
+	/**
+	 * The base context for the admin view
+	 */
+	private HashMap<String,Object> getAdminContext() {
+		HashMap<String, Object> context = new HashMap<String, Object>();
+		context.put("collections", m_vm.getDB().getCollections());
+		return context;
+	}
+	
+	/**
+	 * Render a template file with its context
+	 */
+	public String renderTemplate(String templateFile, Map<String,Object> context) {
+		try {
+			return m_templates.process(templateFile, context);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * Render a template file with it's context to get an http response.
+	 * This will return a status 200 with text/html
+	 */
+	public Response renderToResponse(String template, Map<String,Object> context) {
+		String html = renderTemplate(template, context);
+		return new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, html);
+	}
+
+	/**
+	 * Return a redirection response at the give location
+	 */
+	public Response redirect(String location) {
+		Response resp = new Response(NanoHTTPD.HTTP_REDIRECT, NanoHTTPD.MIME_PLAINTEXT, location);
+		resp.header.put("Location", location);
+		return resp;
+	}
+
+	
 	private JSEval m_requestInit;
 	
 	private TemplateEngine m_templates = new TemplateEngine();

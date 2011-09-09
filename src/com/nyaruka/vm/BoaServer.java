@@ -28,7 +28,6 @@ import com.nyaruka.http.BoaHttpServer;
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
 import com.nyaruka.http.NanoHTTPD;
-import com.nyaruka.http.NanoHTTPD.Response;
 import com.nyaruka.json.JSON;
 import com.nyaruka.util.FileUtil;
 
@@ -57,7 +56,6 @@ public abstract class BoaServer {
 	public abstract void createApp(String name);
 	
 	public void start() {
-
 		List<JSEval> evals = new ArrayList<JSEval>();
 		evals.add(new JSEval(readFile("static/js/json2.js"), "json2.js"));
 		evals.add(new JSEval(readFile("sys/js/jsInit.js"), "jsInit.js"));
@@ -68,11 +66,18 @@ public abstract class BoaServer {
 		
 		configureTemplateEngines(m_templates, m_appTemplates);		
 		m_requestInit = new JSEval(readFile("sys/js/requestInit.js"), "requestInit.js");
-
 	}
 	
 	public void stop() {
 		m_vm.stop();
+	}
+
+	public Session initSession(HttpRequest request){
+		return m_vm.getSessions().ensureSession(request);
+	}
+	
+	public void saveSession(Session session){
+		m_vm.getSessions().save(session);
 	}
 	
 	public void log(String message) {
@@ -107,7 +112,7 @@ public abstract class BoaServer {
 		}
 	}
 
-	public HttpResponse renderLog() {
+	public HttpResponse renderLog(HttpRequest request) {
 		HashMap<String,Object> data = new HashMap<String,Object>();
 		data.put("log", m_vm.getLog().toString());
 		return renderToResponse("log.html", data);

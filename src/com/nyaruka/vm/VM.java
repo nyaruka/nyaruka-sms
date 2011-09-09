@@ -37,6 +37,7 @@ public class VM {
 	public void start(List<JSEval> evals) {
 		m_db.open();
 		m_db.init();
+		m_sessions = new SessionManager(m_db);
 		
 		// Create our context and turn off compilation
 		m_context = Context.enter();
@@ -143,7 +144,7 @@ public class VM {
 	public StringBuffer getLog(){ return m_log; }
 	public DB getDB(){ return m_db; }
 	public static VM getVM(){ return s_this; }
-
+	public SessionManager getSessions(){ return m_sessions; }
 	
 	/** Our system-wide log */
 	private StringBuffer m_log = new StringBuffer();
@@ -166,5 +167,7 @@ public class VM {
 	
 	/** Singleton instance */
 	private static VM s_this;
-
+	
+	/** our session manager */
+	private SessionManager m_sessions;
 }

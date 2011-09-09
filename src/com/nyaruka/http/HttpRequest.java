@@ -2,6 +2,8 @@ package com.nyaruka.http;
 
 import java.util.Properties;
 
+import com.nyaruka.vm.Session;
+
 /**
  * Our representation of an HTTP request.
  * 
@@ -10,6 +12,10 @@ import java.util.Properties;
 public class HttpRequest {
 
 	public static final String COOKIE_HEADER = "cookie";
+	
+	public HttpRequest(String url){
+		this(url, "GET", new Properties(), new Properties());
+	}
 	
 	public HttpRequest(String url, String method, Properties headers, Properties params){
 		m_url = url;
@@ -20,6 +26,14 @@ public class HttpRequest {
 	
 	public String url(){
 		return m_url;
+	}
+	
+	public Session session(){
+		return m_session;
+	}
+	
+	public void setSession(Session session){
+		m_session = session;
 	}
 	
 	public String method(){
@@ -66,4 +80,5 @@ public class HttpRequest {
 	private Properties m_params;
 	private Properties m_headers;
 	private Properties m_cookies;
+	private Session m_session;
 }

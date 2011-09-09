@@ -53,6 +53,9 @@ public abstract class BoaServer {
 	/** Read the apps from whatever storage mechanism is approrpriate for the server */
 	public abstract List<BoaApp> getApps();
 	
+	/** Create an app with the given namespace */
+	public abstract void createApp(String name);
+	
 	public void start() {
 
 		List<JSEval> evals = new ArrayList<JSEval>();
@@ -110,8 +113,24 @@ public abstract class BoaServer {
 		return renderToResponse("log.html", data);
 	}
 	
-	public HttpResponse renderAdmin() {
+	public HttpResponse renderAdmin(HttpRequest request) {
 		HashMap<String,Object> context = getAdminContext();
+
+		String url = request.url();
+	
+		if (url.equals("/admin/app") || url.equals("/admin/app/")){
+			if (request.method().equalsIgnoreCase("POST")){
+				String appName = request.params().getProperty("name");
+				
+				// TODO: sanitize or complain about bad app names
+				createApp(appName);
+				return redirect("/admin/app/" + appName);
+			}
+
+			return renderToResponse("apps.html", context);
+		}
+		
+		
 		return renderToResponse("index.html", context);
 	}
 	
@@ -264,7 +283,8 @@ public abstract class BoaServer {
 			CharArrayWriter stack = new CharArrayWriter();
 			error.printStackTrace(new PrintWriter(stack));
 			HashMap<String, Object> context = getAdminContext();
-			context.put("error", stack.toString());
+			context.put("error", error.getLocalizedMessage());
+			context.put("stack", stack.toString());
 			return renderToResponse("error.html", context);
 		} catch (Throwable t) {
 			t.printStackTrace();
@@ -286,6 +306,7 @@ public abstract class BoaServer {
 	private HashMap<String,Object> getAdminContext() {
 		HashMap<String, Object> context = new HashMap<String, Object>();
 		context.put("collections", m_vm.getDB().getCollections());
+		context.put("apps", m_vm.getApps());
 		return context;
 	}
 	

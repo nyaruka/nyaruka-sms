@@ -1,7 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
-<pre>
+<h2>Oopsie.</h2></br>
+<div class="alert-message warning">
 {{ error }}
+</div>
+
+<h5>For you developer types:</h5>
+<pre>
+{{stack}}
 </pre>
 {% endblock %}

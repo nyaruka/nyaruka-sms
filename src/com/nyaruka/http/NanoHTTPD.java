@@ -750,12 +750,7 @@ public class NanoHTTPD
 		 */
 		private void sendError( String status, String msg ) throws InterruptedException
 		{
-<<<<<<< HEAD
 			sendResponse( status, MIME_PLAINTEXT, null, null, new ByteArrayInputStream( msg.getBytes()));
-=======
-			System.out.println(status + " error: " + msg);
-			sendResponse( status, MIME_PLAINTEXT, null, new ByteArrayInputStream( msg.getBytes()));
->>>>>>> d6e559c862a94881242156ba6c0486e7a56adc3b
 			throw new InterruptedException();
 		}
 

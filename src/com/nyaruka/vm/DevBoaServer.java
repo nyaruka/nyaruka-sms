@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.nyaruka.db.dev.DevDB;
@@ -55,6 +56,33 @@ public class DevBoaServer extends BoaServer {
 		}
 		
 		return apps;
+	}
+	
+	@Override
+	public void createApp(String namespace) {
+		
+		if (new File(getPath("apps"), namespace).exists()) {
+			throw new RuntimeException("App with name '" + namespace + "' already exists.");
+		}
+		
+		File appTemplateDir = new File(getPath("sys/newapp"));
+		
+		// render our main.js as a template
+		HashMap<String,Object> context = new HashMap<String,Object>();
+		context.put("name", namespace);
+		String mainJS = renderTemplate(getPath("sys/newapp/main.js"), context);
+		
+		// create our app dir and write our rendered main js
+		File appDir = new File(getPath("apps/" + namespace));
+		appDir.mkdirs();		
+		FileUtil.writeFile(new File(appDir, "main.js"), mainJS);
+		
+		// copy all files that aren't the main.js file over
+		for (File f : appTemplateDir.listFiles()) {
+			if (!f.getName().equals("main.js")) {
+				FileUtil.copyFile(f, new File(appDir, f.getName()));
+			}
+		}		
 	}
 	
 	private String getPath(String path) {

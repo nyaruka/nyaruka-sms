@@ -76,7 +76,7 @@ public class BoaHttpServer extends NanoHTTPD {
 				return m_boa.renderLog();
 			}
 			else if (url.startsWith("/admin")) {
-				return m_boa.renderAdmin();
+				return m_boa.renderAdmin(request);
 			}
 			
 			if (url.startsWith("/")) {

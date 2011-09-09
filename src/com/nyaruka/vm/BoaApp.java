@@ -36,7 +36,7 @@ public class BoaApp {
 		m_main = main;
 		m_state = STALE;
 	}
-
+	
 	public String getNamespace() {
 		return m_namespace;
 	}

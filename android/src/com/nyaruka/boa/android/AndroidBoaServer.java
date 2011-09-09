@@ -57,6 +57,11 @@ public class AndroidBoaServer extends BoaServer {
 	}
 	
 	@Override
+	public void createApp(String namespace) {
+		
+	}
+	
+	@Override
 	public void configureTemplateEngines(TemplateEngine systemTemplates, TemplateEngine appTemplates) {
 			
 		systemTemplates.getConfiguration().setWorkspace("sys");

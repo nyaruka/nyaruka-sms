@@ -135,6 +135,10 @@ public class VM {
 		start(evals);
 	}
 
+	public List<BoaApp> getApps() {
+		return m_apps;
+	}
+	
 	public Router getRouter(){ return m_router;	}
 	public StringBuffer getLog(){ return m_log; }
 	public DB getDB(){ return m_db; }
@@ -162,4 +166,5 @@ public class VM {
 	
 	/** Singleton instance */
 	private static VM s_this;
+
 }

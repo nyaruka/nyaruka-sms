@@ -14,6 +14,16 @@
     <div class="container">
       <h3><a href="/admin">BoaSMS</a></h3>
       <ul class="nav">
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle">Apps</a> 
+          <ul class="dropdown-menu"> 
+            {% for app in apps %}
+            <li><a href="/admin/app/{{ app.namespace }}/">{{ app.namespace }}</a></li> 
+            {% endfor %}
+            <li class="divider"></li> 
+            <li><a href="/admin/app/">All Apps</a></li> 
+          </ul>         
+        </li>
         <li class="dropdown"> 
           <a href="#" class="dropdown-toggle">Collections</a> 
           <ul class="dropdown-menu"> 
@@ -31,46 +41,28 @@
   </div>
 </div>
 
-<div class="container">
+<div class="container" style="padding-top:10px">
 {% block beforecontent %}
 {% endblock %}
 
 {% block content %}
 {% endblock %}
 
-{% block aftercontent %}
-<div id="editor_window" class="modal" style="display: none">
-  <div class="modal-header">
-    <h3 id="editor_title">Edit Record</h3>
-  </div>
-  <div class="modal-body" id="editor-body">
-    <div id="editor_help">
-      <h3>JSON Records</h3>
-      <p>All records are saved as plain JSON in the database.  You can choose to create indexes on root level attributes for querying.</p>
-      <p>The JSON format is strict, you'll need to include quotes around your attribute names and remove extra commas, for example:</p>
-      <pre>
-{
-  "first": "John",
-  "last": "Doe",
-  "age": 32,
-}</pre>
-      <p>Unique numerical  ids are automatically created for new records as they are inserted.</p>
-    </div>
-    <pre id="editor">{{ json|escape }}</pre>
-  </div>
-  <div class="modal-footer">
-    <a href="#" class="btn primary" id="save_button">save</a>
-    <a href="#" class="btn" id="cancel_button">cancel</a>
-  </div>
-</div>
+        <div id="promptDialog" class="modal" style="width:310px;display:none;position: relative; top: auto; left: auto; margin: 0 auto; z-index: 1"> 
+          <div class="modal-header"> 
+            <h3 id="prompt">Modal Heading</h3> 
+            <a href="#" id="promptClose" class="close">&times;</a> 
+          </div> 
+          <div class="modal-body">          	
+          	<p id="promptDescription"></p>
+          	<input id="promptResult" class="xlarge" style="margin:0 auto;height:30px" type="text" size="30">            
+          </div> 
+          <div class="modal-footer"> 
+            <a href="#" id="promptOk" class="btn primary">Ok</a> 
+            <a href="#" id="promptCancel" class="btn secondary">Cancel</a> 
+          </div> 
+        </div> 
 
-<div id="mask">
-</div>
-
-<form method="post" id="form">
-  <input type="hidden" value="" name="json" id="json"></input>
-</form>
-{% endblock %}
 
 <script src="/static/js/jquery-1.6.2.min.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/js/json2.js" type="text/javascript" charset="utf-8"></script>
@@ -86,7 +78,55 @@
   var $li = $(this).parent("li").toggleClass('open');
   return false;
   });
+  
+  function promptString(prompt, description, handler) {  
+  	
+  	promptHandler = handler;
+  	
+  	$("#prompt").text(prompt);    
+    if (description) {
+    	var desc = $("#promptDescription");
+    	desc.text(description);
+    	desc.show();
+    } else {
+		$("#promptDescription").hide();
+	}
+  	$("#promptDialog").show();
+  	$("#promptResult").focus();
+  }
+  
+  function submitPrompt() {
+  	if (promptHandler) {
+  		promptHandler($("#promptResult").val());
+  		$("#promptDialog").hide();
+  	}
+  }
+  
+  $(document).ready(function() {
+  	$("#promptOk").click(function() {
+  		submitPrompt();
+  	});
+  	
+  	$("#promptCancel").click(function() {
+  		$("#promptDialog").hide();
+  	});
+  	
+  	$("#promptClose").click(function() {
+  		$("#promptDialog").hide();
+  	});
+  	
+  	$("#promptResult").keypress(function(e){
+      	if(e.which == 13){
+      	   submitPrompt();
+     	}
+    });
+    
+  });
+  
+  
+  
 </script>
+
 {% block extrascript %}
 {% endblock %}
 

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block actions %}
+<ul class="secondary-nav">
+  <li class="dropdown"> 
+    <a href="#" class="dropdown-toggle">Actions</a> 
+    <ul class="dropdown-menu">
+      <li><a href="#" id="add_button">Create App</a></li>
+    </ul>
+  </li> 
+</ul>
+{% endblock %}
+
+{% block content %}
+
+<form id="add_form" method="POST">
+  <input type="hidden" name="name" value="" id="app_name"></input>
+</form>
+
+
+{% end block %}
+
+{% block extrascript %}
+<script>
+
+  $(document).ready(function(){
+  $("#add_button").click(function(event){
+      event.preventDefault();      
+      promptString("Enter the name for your app", null, function(value){ 
+      	$("#app_name").val(value);
+      	$("#add_form").submit();
+      });
+    });
+  });
+</script>
+{% endblock %}

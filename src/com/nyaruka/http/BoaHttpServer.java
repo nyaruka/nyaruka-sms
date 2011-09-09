@@ -46,13 +46,16 @@ public class BoaHttpServer extends NanoHTTPD {
 		Properties params = request.params();
 		String method = request.method();
 		
+		// static files don't need server stuff
+		if (url.indexOf('.') > -1){
+			return serveFile(request);
+		}
+		
 		try{
+		
 			m_boa.start();
 			
-			if (url.indexOf('.') > -1){
-				return serveFile(request);
-			}
-			else if (url.startsWith("/db")){
+			if (url.startsWith("/db")){
 				return m_boa.renderDB(request);
 			}
 			else if (url.equals("/edit")) {
@@ -65,24 +68,25 @@ public class BoaHttpServer extends NanoHTTPD {
 						FileUtil.writeFile(file, contents);
 						return new HttpResponse(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_PLAINTEXT, "OK");
 					} else {
-						String editor = m_boa.renderEditor(file, params.getProperty("filename"));
-						return new HttpResponse(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, editor);
+						return m_boa.renderEditor(file, params.getProperty("filename"));
 					}
 				}
 			}
 			else if (url.equals("/log")) {
-				return new HttpResponse(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, m_boa.renderLog());
-				
+				return m_boa.renderLog();
+			}
+			else if (url.startsWith("/admin")) {
+				return m_boa.renderAdmin();
 			}
 			
 			if (url.startsWith("/")) {
 				url = url.substring(1);
 			}
+			return m_boa.handleAppRequest(request);
 			
-			return m_boa.handleRequest(request);
 		} catch (Throwable t){
 			t.printStackTrace();
-			return new HttpResponse(NanoHTTPD.HTTP_INTERNALERROR, NanoHTTPD.MIME_HTML, m_boa.renderError(t));			
+			return m_boa.renderError(t);			
 		} finally {
 			try {
 				m_boa.stop();
@@ -134,7 +138,6 @@ public class BoaHttpServer extends NanoHTTPD {
 		try{
 			is = m_boa.getInputStream(uri);
 		} catch (Throwable t){
-			t.printStackTrace();
 			return new HttpResponse(HTTP_NOTFOUND, MIME_PLAINTEXT, "Error 404, file not found.");
 		}
 		

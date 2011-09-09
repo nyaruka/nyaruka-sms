@@ -6,11 +6,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.asfun.jangod.base.Application;
-import net.asfun.jangod.base.ConfigInitializer;
 import net.asfun.jangod.base.Configuration;
 import net.asfun.jangod.template.TemplateEngine;
-
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.Log;
@@ -25,6 +22,7 @@ import com.nyaruka.vm.BoaServer;
  */
 public class AndroidBoaServer extends BoaServer {
 
+	
 	public static final String TAG = AndroidBoaServer.class.getSimpleName();
 	
 	public AndroidBoaServer(int port, Context context) throws IOException {

@@ -2,10 +2,35 @@
 
 <head>
   <title>{% block title %}DB Browser{% endblock %}</title>
-  <link rel="stylesheet" href="/static/css/db.css" type="text/css" /> 
+  <link rel="stylesheet" href="/static/css/bootstrap-1.2.0.min.css" type="text/css">
+  <link rel="stylesheet" href="/static/css/db.css" type="text/css">
   {% block extrastyle %}{% endblock %} 
 </head>
 <body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="container">
+      <h3><a href="/">BoaSMS</a></h3>
+      <ul class="nav">
+        <li class="dropdown"> 
+          <a href="#" class="dropdown-toggle">Collections</a> 
+          <ul class="dropdown-menu"> 
+            {% for collection in collections %}
+            <li><a href="/db/{{ collection.name }}/">{{ collection.name }}</a></li> 
+            {% endfor %}
+            <li class="divider"></li> 
+            <li><a href="/db/">All Collections</a></li> 
+          </ul> 
+        </li> 
+      </ul> 
+      {% block actions %}
+      {% endblock %}
+    </div>
+  </div>
+</div>
+
+<div class="container">
 {% block beforecontent %}
 {% endblock %}
 
@@ -13,11 +38,117 @@
 {% endblock %}
 
 {% block aftercontent %}
+<div id="editor_window" class="modal" style="display: none">
+  <div class="modal-header">
+    <h3 id="editor_title">Edit Record</h3>
+  </div>
+  <div class="modal-body" id="editor-body">
+    <div id="editor_help">
+      <h3>JSON Records</h3>
+      <p>All records are saved as plain JSON in the database.  You can choose to create indexes on root level attributes for querying.</p>
+      <p>The JSON format is strict, you'll need to include quotes around your attribute names and remove extra commas, for example:</p>
+      <pre>
+{
+  "first": "John",
+  "last": "Doe",
+  "age": 32,
+}</pre>
+      <p>Unique numerical  ids are automatically created for new records as they are inserted.</p>
+    </div>
+    <pre id="editor">{{ json|escape }}</pre>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn primary" id="save_button">save</a>
+    <a href="#" class="btn" id="cancel_button">cancel</a>
+  </div>
+</div>
+
+<div id="mask">
+</div>
+
+<form method="post" id="form">
+  <input type="hidden" value="" name="json" id="json"></input>
+</form>
 {% endblock %}
 
 <script src="/static/js/jquery-1.6.2.min.js" type="text/javascript" charset="utf-8"></script>
+
 {% block extrascript %}
 {% endblock %}
+
+<script>
+  $("body").bind("click", function (e) {
+  $('.dropdown-toggle, .menu').parent("li").removeClass("open");
+  });
+  $(".dropdown-toggle, .menu").click(function (e) {
+  var $li = $(this).parent("li").toggleClass('open');
+  return false;
+  });
+</script>
+
+<script src="/static/js/jquery-1.6.2.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/json2.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/theme-twilight.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/mode-json.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/beautify.js" type="text/javascript" charset="utf-8"></script>
+
+<script>
+var editor = null;
+
+function showEditor(title){
+  $("#editor_title").text(title);
+
+  $("#mask").css({ width: $(window).width(), height: $(window).height() });
+  $("#mask").show();
+  $("#editor_window").show();
+
+  if (!editor){
+    var opts = { indent_size: 1, indent_char: '\t' };
+    res = js_beautify($("#editor").text(), opts)
+    $("#editor").text(res);
+
+    editor = ace.edit("editor");
+    editor.setShowPrintMargin(false);
+    var JSONMode = require("ace/mode/json").Mode;
+    editor.getSession().setMode(new JSONMode());
+
+    var text = editor.getSession().getValue();
+    if (text.length == 0){
+      editor.getSession().setValue("{\n\n}");
+      editor.gotoLine(2);
+    }
+    editor.focus();
+  }
+}
+
+$(document).ready(function(){
+  $("#mask").click(function(){
+    $("#mask").hide();
+    $("#editor_window").hide();
+  });
+
+  $("#cancel_button").click(function(event){
+    event.preventDefault();
+    $("#mask").hide();
+    $("#editor_window").hide();
+  });
+
+  $("#save_button").click(function(event){
+    try {
+      // this will throw if their json is invalid
+      JSON.parse(editor.getSession().getValue());
+      $("#json").val(editor.getSession().getValue());
+      $("#form").submit();
+    } catch(e) {
+      // warn them if so
+      alert("Your JSON contains a syntax error, please try again.");
+      editor.focus();
+    }
+    event.preventDefault(); 
+  });
+});
+</script>
 
 </body>
 

@@ -13,6 +13,10 @@ public class HttpRequest {
 
 	public static final String COOKIE_HEADER = "cookie";
 	
+	public HttpRequest(String url){
+		this(url, "GET", new Properties(), new Properties());
+	}
+	
 	public HttpRequest(String url, String method, Properties headers, Properties params){
 		m_url = url;
 		m_method = method;

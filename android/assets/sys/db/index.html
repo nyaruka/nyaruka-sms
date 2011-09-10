@@ -1,6 +1,6 @@
-{% extends "db/base.html" %}
+{! extends "base.html" !}
 
-{% block actions %}
+{! block actions !}
 <ul class="secondary-nav">
   <li class="dropdown"> 
     <a href="#" class="dropdown-toggle">Actions</a> 
@@ -9,9 +9,9 @@
     </ul>
   </li> 
 </ul>
-{% endblock %}
+{! endblock !}
 
-{% block content %}
+{! block content !}
 <div class="page-header">
   <h1>Collections</h1>
 </div>
@@ -46,9 +46,9 @@
   <input type="hidden" name="name" value="" id="collection_name"></input>
 </form>
 
-{% endblock %}
+{! endblock !}
 
-{% block extrascript %}
+{! block extrascript !}
 <script>
   $(document).ready(function(){
     $(".collection_row").click(function(){
@@ -66,4 +66,4 @@
     });
   });
 </script>
-{% endblock %}
+{! endblock !}

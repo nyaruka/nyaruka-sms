@@ -1,11 +1,11 @@
 <html>
 
 <head>
-  <title>{% block title %}BoaSMS{% endblock %}</title>
+  <title>{! block title !}BoaSMS{! endblock !}</title>
   <link rel="stylesheet" href="/static/css/bootstrap-1.2.0.min.css" type="text/css">
   <link rel="stylesheet" href="/static/css/db.css" type="text/css">
-  {% block extrastyle %}
-  {% endblock %} 
+  {! block extrastyle !}
+  {! endblock !} 
 </head>
 <body>
 
@@ -35,18 +35,23 @@
           </ul> 
         </li> 
       </ul> 
-      {% block actions %}
-      {% endblock %}
+      {! block actions !}
+      {! endblock !}
     </div>
   </div>
 </div>
 
 <div class="container" style="padding-top:10px">
-{% block beforecontent %}
-{% endblock %}
 
-{% block content %}
-{% endblock %}
+{! block beforecontent !}
+{! endblock !}
+
+{! block content !}
+{! endblock !}
+
+{! block aftercontent !}
+{! endblock !}
+
 
         <div id="promptDialog" class="modal" style="width:310px;display:none;position: relative; top: auto; left: auto; margin: 0 auto; z-index: 1"> 
           <div class="modal-header"> 
@@ -124,11 +129,10 @@
   });
   
   
-  
 </script>
 
-{% block extrascript %}
-{% endblock %}
+{! block extrascript !}
+{! endblock !}
 
 </body>
 

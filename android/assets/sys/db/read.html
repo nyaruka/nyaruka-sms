@@ -43,10 +43,10 @@
     });
 
     $("#delete_button").click(function(event){
-      if (confirm("Remove record?")){
-        $("#delete_form").submit();
-      }
       event.preventDefault(); 
+      confirm("Remove Record", "Are you sure you want to remove this record? Once you remove it, it will be gone forever.", "Remove", function(){ 
+      	$("#delete_form").submit();
+      });
     });
   });
 </script>

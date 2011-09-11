@@ -140,6 +140,15 @@ public class VM {
 		return m_apps;
 	}
 	
+	public BoaApp getApp(String name) {
+		for (BoaApp app : m_apps) {
+			if (app.getNamespace().equals(name)) {
+				return app;
+			}
+		}
+		return null;
+	}
+	
 	public Router getRouter(){ return m_router;	}
 	public StringBuffer getLog(){ return m_log; }
 	public DB getDB(){ return m_db; }

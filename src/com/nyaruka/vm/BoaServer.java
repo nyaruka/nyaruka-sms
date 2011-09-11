@@ -55,6 +55,9 @@ public abstract class BoaServer {
 	/** Create an app with the given namespace */
 	public abstract void createApp(String name);
 	
+	/** Remove the app with the give namespace */
+	public abstract void removeApp(String name);
+	
 	public void start() {
 		List<JSEval> evals = new ArrayList<JSEval>();
 		evals.add(new JSEval(readFile("static/js/json2.js"), "json2.js"));
@@ -119,20 +122,40 @@ public abstract class BoaServer {
 	}
 	
 	public HttpResponse renderAdmin(HttpRequest request) {
+		
+		Pattern APP = Pattern.compile("^/admin/app/([a-zA-Z]+)/$");
+
+					
 		HashMap<String,Object> context = getAdminContext();
 
 		String url = request.url();
 	
-		if (url.equals("/admin/app") || url.equals("/admin/app/")){
-			if (request.method().equalsIgnoreCase("POST")){
-				String appName = request.params().getProperty("name");
-				
-				// TODO: sanitize or complain about bad app names
-				createApp(appName);
-				return redirect("/admin/app/" + appName);
-			}
+		if (url.startsWith("/admin/app")){
 
-			return renderToResponse("apps.html", context);
+			Matcher matcher = APP.matcher(url);
+			if (matcher.find()) {
+				String appName = matcher.group(1);		
+				
+				if (request.method().equalsIgnoreCase("POST")){
+					removeApp(appName);
+					return redirect("/admin/app/");
+				}
+				
+				context.put("app", m_vm.getApp(appName));
+				return renderToResponse("app/view.html", context);								
+			} else {
+
+				if (request.method().equalsIgnoreCase("POST")){
+					String appName = request.params().getProperty("name");
+					
+					// TODO: sanitize or complain about bad app names
+					createApp(appName);
+					return redirect("/admin/app/" + appName);
+				}
+				
+				return renderToResponse("app/index.html", context);
+			}
+			
 		}
 		
 		

@@ -1,31 +1,33 @@
 package com.nyaruka.vm;
 
+import java.util.HashMap;
+
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
-import com.nyaruka.http.NanoHTTPD;
 
 /**
  * Responsible for providing pages to login, create accounts and authenticate.
  * 
  * @author nicp
  */
-public class AuthApp {
+public class AuthApp extends NativeBoaApp {
 
-	private VM m_vm;
-	
-	public AuthApp(VM vm){
-		m_vm = vm;
+	public AuthApp(BoaServer boa){
+		super(boa, "auth");
 	}
 
-	/**
-	 * Handles the passed in HttpRequest
-	 * 
-	 * @param request
-	 * @return
-	 */
 	public HttpResponse handle(HttpRequest request){
-						
+		String action = getAction(request);
+		String body = null;
 		
-		return new HttpResponse(NanoHTTPD.HTTP_NOTFOUND, "not found, sorry"); 
+		if (action.equals("")){
+		}
+		else if (action.equals("login")){
+			body = renderTemplate("/auth/login.html", new HashMap<String, Object>());
+		}
+		if (body != null){
+			return new HttpResponse(body);
+		}
+		return null;
 	}
 }

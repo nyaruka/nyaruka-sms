@@ -61,6 +61,9 @@ public class BoaHttpServer extends NanoHTTPD {
 			if (url.startsWith("/db")){
 				response = m_boa.renderDB(request);
 			}
+			else if (url.startsWith("/auth")){
+				response = m_boa.renderAuth(request);
+			}
 			else if (url.equals("/edit")) {
 				if (!params.containsKey("filename")) {
 					throw new IllegalArgumentException("The editor respectfully requests a file to edit.");

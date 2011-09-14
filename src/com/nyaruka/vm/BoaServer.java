@@ -41,6 +41,9 @@ public abstract class BoaServer {
 		}
 		
 		m_vm = new VM(db);
+		
+		// init our auth app
+		m_auth = new AuthApp(this);
 	}
 	
 	/** Define out to get the contents of a given path */
@@ -147,6 +150,10 @@ public abstract class BoaServer {
 		return renderToResponse("editor.html", data);
 	}
 
+	public HttpResponse renderAuth(HttpRequest request){
+		return m_auth.handle(request);
+	}
+	
 	public HttpResponse renderDB(HttpRequest request){
 		Pattern COLL = Pattern.compile("^/db/([a-zA-Z]+)/$");
 		Pattern RECORD = Pattern.compile("^/db/([a-zA-Z]+)/(\\d+)/$");
@@ -348,5 +355,7 @@ public abstract class BoaServer {
 	
 	/** this vm is where all the magic happens */
 	private VM m_vm;
-
+	
+	/** our auth app */
+	private AuthApp m_auth;
 }

@@ -7,18 +7,18 @@ import junit.framework.TestCase;
 public class NativeBoaAppTest extends TestCase {
 
 	public void testGetAction(){
-		NativeBoaApp app = new NativeBoaApp(null){};
+		NativeBoaApp app = new NativeBoaApp(null, "auth"){};
 		
 		HttpRequest request = new HttpRequest("/auth/login/");
-		assertEquals("login", app.getAction("auth", request));
+		assertEquals("login", app.getAction(request));
 		
 		request = new HttpRequest("/auth/login/nicpottier/");
-		assertEquals("login", app.getAction("auth", request));
+		assertEquals("login", app.getAction(request));
 		
 		request = new HttpRequest("/db/foo/");
-		assertNull(app.getAction("auth", request));
+		assertNull(app.getAction(request));
 		
 		request = new HttpRequest("/auth/");
-		assertEquals("", app.getAction("auth", request));
+		assertEquals("", app.getAction(request));
 	}
 }

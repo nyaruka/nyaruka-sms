@@ -1,5 +1,6 @@
 package com.nyaruka.vm;
 
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,10 +12,12 @@ import com.nyaruka.http.HttpRequest;
  * @author nicp
  */
 public abstract class NativeBoaApp {
-	private VM m_vm;
+	protected BoaServer m_boa;
+	protected String m_name;
 	
-	public NativeBoaApp(VM vm){
-		m_vm = vm;
+	public NativeBoaApp(BoaServer boa, String name){
+		m_boa = boa;
+		m_name = name;
 	}
 
 	Pattern APP_PATTERN = Pattern.compile("^/(\\w+)/(.*)$");
@@ -31,7 +34,7 @@ public abstract class NativeBoaApp {
 	 * @param request
 	 * @return
 	 */
-	public String getAction(String name, HttpRequest request){
+	public String getAction(HttpRequest request){
 		Matcher matcher = APP_PATTERN.matcher(request.url());
 		if (!matcher.find()){
 			return null;
@@ -39,7 +42,7 @@ public abstract class NativeBoaApp {
 		
 		// make sure it matches our app
 		String app = matcher.group(1);
-		if (!app.equalsIgnoreCase(name)){
+		if (!app.equalsIgnoreCase(m_name)){
 			return null;
 		}
 		
@@ -49,6 +52,10 @@ public abstract class NativeBoaApp {
 			return "";
 		}
 		
-		return matcher.group(1).toLowerCase();
+		return matcher.group(2).toLowerCase();
+	}
+	
+	public String renderTemplate(String templateName, Map<String, Object> context){
+		return m_boa.renderTemplate(templateName, context);
 	}
 }

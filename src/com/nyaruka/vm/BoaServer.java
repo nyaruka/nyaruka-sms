@@ -7,28 +7,23 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.asfun.jangod.template.TemplateEngine;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import com.nyaruka.db.Collection;
-import com.nyaruka.db.Cursor;
+import com.nyaruka.app.AuthApp;
+import com.nyaruka.app.DBApp;
+import com.nyaruka.app.NativeApp;
+import com.nyaruka.app.Route;
+import com.nyaruka.app.TemplateResponse;
 import com.nyaruka.db.DB;
-import com.nyaruka.db.Record;
 import com.nyaruka.http.BoaHttpServer;
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
 import com.nyaruka.http.NanoHTTPD;
-import com.nyaruka.json.JSON;
 import com.nyaruka.util.FileUtil;
 
 public abstract class BoaServer {
@@ -43,7 +38,8 @@ public abstract class BoaServer {
 		m_vm = new VM(db);
 		
 		// init our auth app
-		m_auth = new AuthApp(this);
+		addNativeApp(new AuthApp(this));
+		addNativeApp(new DBApp(m_vm));
 	}
 	
 	/** Define out to get the contents of a given path */
@@ -52,7 +48,7 @@ public abstract class BoaServer {
 	/** Direct template engines how to find files on the given platform */
 	public abstract void configureTemplateEngines(TemplateEngine systemTemplates, TemplateEngine appTemplates);
 
-	/** Read the apps from whatever storage mechanism is approrpriate for the server */
+	/** Read the apps from whatever storage mechanism is appropriate for the server */
 	public abstract List<BoaApp> getApps();
 	
 	/** Create an app with the given namespace */
@@ -90,6 +86,31 @@ public abstract class BoaServer {
 		m_vm.getLog().append(message).append("\n");
 	}
 
+	public void addNativeApp(NativeApp app){
+		m_nativeApps.add(app);
+		m_nativeRoutes.addAll(app.getRoutes());
+	}
+	
+	public HttpResponse handleNativeRequest(HttpRequest request){
+		HttpResponse response = null;
+		
+		// find a view
+		for (Route route : m_nativeRoutes){
+			if (route.matches(request.url())){
+				response = route.getView().handle(request);
+				break;
+			}
+		}
+		
+		if (response instanceof TemplateResponse){
+			TemplateResponse tp = (TemplateResponse) response;
+			tp.setBody(renderTemplate(tp.getTemplate(), tp.getContext()));
+		}
+		
+		
+		// otherwise, nothing found
+		return response;
+	}
 
 	public HttpResponse handleAppRequest(HttpRequest request){
 		try {
@@ -173,130 +194,6 @@ public abstract class BoaServer {
 		return renderToResponse("editor.html", data);
 	}
 
-	public HttpResponse renderAuth(HttpRequest request){
-		return m_auth.handle(request);
-	}
-	
-	public HttpResponse renderDB(HttpRequest request){
-		Pattern COLL = Pattern.compile("^/db/([a-zA-Z]+)/$");
-		Pattern RECORD = Pattern.compile("^/db/([a-zA-Z]+)/(\\d+)/$");
-		Pattern DELETE_RECORD = Pattern.compile("^/db/([a-zA-Z]+)/(\\d+)/delete/$");		
-		Pattern DELETE_COLLECTION = Pattern.compile("^/db/([a-zA-Z]+)/delete/$");				
-		
-		Matcher matcher = null;
-	
-		String url = request.url();
-		Properties params = request.params();
-		String method = request.method();
-		
-		if (url.equals("/db") || url.equals("/db/")){
-			if (method.equalsIgnoreCase("POST")){
-				m_vm.getDB().ensureCollection(params.getProperty("name"));
-			}
-			
-			return renderToResponse("db/index.html", getAdminContext());
-		} 
-		
-		matcher = DELETE_COLLECTION.matcher(url);
-		if (matcher.find()){
-			String collName = matcher.group(1);
-			Collection coll = m_vm.getDB().getCollection(collName);
-			m_vm.getDB().deleteCollection(coll);
-			return redirect("/db/");
-		}
-		
-		matcher = COLL.matcher(url);
-		if (matcher.find()){
-			String collName = matcher.group(1);
-			Collection coll = m_vm.getDB().getCollection(collName);
-			
-			// they are adding a new record
-			if (method.equalsIgnoreCase("POST")){
-				JSON json = new JSON(params.getProperty("json"));
-				coll.save(json);
-			}
-			
-			// our set of keys
-			HashSet<String> keys = new HashSet<String>();
-			
-			// build our list of matches
-			ArrayList records = new ArrayList();
-			Cursor cursor = coll.find("{}");
-			while (cursor.hasNext()){
-				Record record = cursor.next();
-				JSON data = record.getData();
-				
-				// add all our unique keys
-				Iterator item_keys = data.keys();
-				while(item_keys.hasNext()){
-					String key = item_keys.next().toString();
-					
-					// get the value
-					Object value = data.get(key);
-					
-					// skip this key if the value is complex
-					if ((value instanceof JSON) || (value instanceof JSONObject) || (value instanceof JSONArray)){
-						// pass
-					} else {
-						keys.add(key);
-					}
-				}
-				
-				records.add(record.toJSON().toMap());
-			}
-			
-			HashMap<String, Object> context = getAdminContext();
-			context.put("keys", keys);
-			context.put("collection", coll);
-			context.put("records", records);
-			return renderToResponse("db/list.html", context);
-		}
-		
-		matcher = DELETE_RECORD.matcher(url);
-		if (matcher.find() && method.equalsIgnoreCase("POST")){
-			String collName = matcher.group(1);
-			Collection coll = m_vm.getDB().getCollection(collName);
-			long id = Long.parseLong(matcher.group(2));
-			Record rec = coll.getRecord(id);			
-			coll.delete(id);
-			return redirect("/db/" + coll.getName() + "/");
-		}
-		
-		matcher = RECORD.matcher(url);
-		if (matcher.find()){
-			String collName = matcher.group(1);
-			Collection coll = m_vm.getDB().getCollection(collName);
-			long id = Long.parseLong(matcher.group(2));
-			Record rec = coll.getRecord(id);
-
-			// they are posting new data
-			if (method.equalsIgnoreCase("POST")){
-				JSON json = new JSON(params.getProperty("json"));
-				json.put("id", rec.getId());
-				rec = coll.save(json);
-			} 
-
-			JSON data = rec.getData();
-				
-				// add all our unique keys
-			ArrayList<String> fields = new ArrayList<String>();
-			Iterator item_keys = data.keys();
-			while(item_keys.hasNext()){
-				fields.add(item_keys.next().toString());
-			}
-			
-			HashMap<String, Object> context = getAdminContext();
-			context.put("collection", coll);
-			context.put("record", rec);
-			context.put("values", rec.toJSON().toMap());
-			context.put("fields", fields);
-			context.put("json", rec.getData().toString());
-			return renderToResponse("db/read.html", context);
-		} 
-		
-		throw new RuntimeException("Unknown URL: " + url);
-	}
-	
 	public void loadApps() {
 		List<BoaApp> apps = getApps();
 		log("Found " + apps.size() + " apps to load");
@@ -379,6 +276,9 @@ public abstract class BoaServer {
 	/** this vm is where all the magic happens */
 	private VM m_vm;
 	
-	/** our auth app */
-	private AuthApp m_auth;
+	/** Our native apps */
+	private ArrayList<NativeApp> m_nativeApps = new ArrayList<NativeApp>();
+	
+	/** And their routes */
+	private ArrayList<Route> m_nativeRoutes = new ArrayList<Route>();
 }

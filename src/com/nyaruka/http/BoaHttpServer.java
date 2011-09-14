@@ -58,13 +58,7 @@ public class BoaHttpServer extends NanoHTTPD {
 			Session session = m_boa.initSession(request);
 			HttpResponse response = null;
 
-			if (url.startsWith("/db")){
-				response = m_boa.renderDB(request);
-			}
-			else if (url.startsWith("/auth")){
-				response = m_boa.renderAuth(request);
-			}
-			else if (url.equals("/edit")) {
+			if (url.equals("/edit")) {
 				if (!params.containsKey("filename")) {
 					throw new IllegalArgumentException("The editor respectfully requests a file to edit.");
 				} else {
@@ -84,18 +78,24 @@ public class BoaHttpServer extends NanoHTTPD {
 			else if (url.startsWith("/admin")) {
 				response = m_boa.renderAdmin(request);
 			}
-			
 			else {
-				if (url.startsWith("/")) {
-					url = url.substring(1);
+				// first try native apps
+				response = m_boa.handleNativeRequest(request);
+				
+				// then JS apps
+				if (response == null){
+					if (url.startsWith("/")) {
+						url = url.substring(1);
+					}
+					response = m_boa.handleAppRequest(request);
 				}
-				response = m_boa.handleAppRequest(request);
 			}
 			
 			// if our session is new, set our session cookie in our response
 			if (session.isNew()){
 				response.setCookie(SessionManager.SESSION_KEY, session.getKey());
 			}
+			
 			// save the session if necessary
 			m_boa.saveSession(session);
 			

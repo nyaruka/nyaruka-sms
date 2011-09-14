@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{! extends "../base.html" !}
 
-{% block actions %}
+{! block actions !}
 <ul class="secondary-nav">
   <li class="dropdown"> 
     <a href="#" class="dropdown-toggle">Actions</a> 
@@ -9,28 +9,27 @@
     </ul>
   </li> 
 </ul>
-{% endblock %}
+{! endblock !}
 
-{% block content %}
+{! block content !}
+
+{! endblock !}
+
+{! block extrascript !}
 
 <form id="add_form" method="POST">
   <input type="hidden" name="name" value="" id="app_name"></input>
 </form>
 
-
-{% end block %}
-
-{% block extrascript %}
 <script>
-
   $(document).ready(function(){
   $("#add_button").click(function(event){
       event.preventDefault();      
-      promptString("Enter the name for your app", null, function(value){ 
+      promptString("Create App", "Enter a name for your app. App names should be lower case and have no spaces or special characters. <i>e.g. malnutrution, labs, or hiv</i>", function(value){ 
       	$("#app_name").val(value);
       	$("#add_form").submit();
       });
     });
   });
 </script>
-{% endblock %}
+{! endblock !}

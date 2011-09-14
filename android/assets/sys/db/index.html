@@ -56,13 +56,13 @@
     });
 
 
-    $(".add_button").click(function(event){
-      event.preventDefault();
-      var name = prompt("Enter new collection name:");
-      if (name){
-        $("#collection_name").val(name);
-        $("#add_form").submit();
-      }
+    $(".add_button").click(function(event){    
+      event.preventDefault();      
+      promptString("New Collection", "Enter a name for the new collection. Collection names should be lower case and have no spaces or special characters. <i>e.g. contacts, surveys, or clinics</i>", function(value){ 
+      	$("#collection_name").val(value);
+      	$("#add_form").submit();
+      });
+      
     });
   });
 </script>

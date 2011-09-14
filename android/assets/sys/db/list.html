@@ -57,10 +57,10 @@
     });
 
     $("#delete_button").click(function(event){
-      if (confirm("Remove collection?")){
-        $("#delete_form").submit();
-      }
-      event.preventDefault();
+      event.preventDefault(); 
+      confirm("Remove Collection", "Are you sure you want to remove this collection? Once you remove it, it will be gone forever.", "Remove", function(){ 
+      	$("#delete_form").submit();
+      });    
     });
   });
   

@@ -65,12 +65,12 @@ public class DevBoaServer extends BoaServer {
 			throw new RuntimeException("App with name '" + namespace + "' already exists.");
 		}
 		
-		File appTemplateDir = new File(getPath("sys/newapp"));
+		File appTemplateDir = new File(getPath("sys/app/template"));
 		
 		// render our main.js as a template
 		HashMap<String,Object> context = new HashMap<String,Object>();
 		context.put("name", namespace);
-		String mainJS = renderTemplate(getPath("sys/newapp/main.js"), context);
+		String mainJS = renderTemplate(getPath("sys/app/template/main.js"), context);
 		
 		// create our app dir and write our rendered main js
 		File appDir = new File(getPath("apps/" + namespace));
@@ -83,6 +83,11 @@ public class DevBoaServer extends BoaServer {
 				FileUtil.copyFile(f, new File(appDir, f.getName()));
 			}
 		}		
+	}
+	
+	public void removeApp(String namespace) {
+		File appDir = new File(getPath("apps"), namespace);
+		FileUtil.delete(appDir);		
 	}
 	
 	private String getPath(String path) {

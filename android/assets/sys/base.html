@@ -46,25 +46,29 @@
 {! block beforecontent !}
 {! endblock !}
 
-{! block content !}
-{! endblock !}
+<div id="content">
+	{! block content !}
+	{! endblock !}
+	<div id="mask"/>
+</div>
+
 
 {! block aftercontent !}
 {! endblock !}
 
 
-        <div id="promptDialog" class="modal" style="width:310px;display:none;position: relative; top: auto; left: auto; margin: 0 auto; z-index: 1"> 
+        <div id="modalDialog" class="modal" style="width:310px;display:none;position: relative; top: auto; left: auto; margin: 0 auto; z-index: 1"> 
           <div class="modal-header"> 
-            <h3 id="prompt">Modal Heading</h3> 
-            <a href="#" id="promptClose" class="close">&times;</a> 
+            <h3 id="modalTitle">Modal Heading</h3> 
+            <a href="#" id="modalClose" class="close">&times;</a> 
           </div> 
           <div class="modal-body">          	
-          	<p id="promptDescription"></p>
+          	<p id="modalDescription"></p>
           	<input id="promptResult" class="xlarge" style="margin:0 auto;height:30px" type="text" size="30">            
           </div> 
           <div class="modal-footer"> 
-            <a href="#" id="promptOk" class="btn primary">Ok</a> 
-            <a href="#" id="promptCancel" class="btn secondary">Cancel</a> 
+            <a href="#" id="modalOk" class="btn primary">Ok</a> 
+            <a href="#" id="modalCancel" class="btn secondary">Cancel</a> 
           </div> 
         </div> 
 
@@ -84,47 +88,107 @@
   return false;
   });
   
-  function promptString(prompt, description, handler) {  
-  	
-  	promptHandler = handler;
-  	
-  	$("#prompt").text(prompt);    
-    if (description) {
-    	var desc = $("#promptDescription");
-    	desc.text(description);
-    	desc.show();
-    } else {
-		$("#promptDescription").hide();
-	}
-  	$("#promptDialog").show();
-  	$("#promptResult").focus();
+  function mask() {
+  	$("#mask").css({width: $(window).width(), height: $(window).height(),  zindex: 9000 });
+  	$("#mask").show();  	
   }
   
-  function submitPrompt() {
-  	if (promptHandler) {
-  		promptHandler($("#promptResult").val());
-  		$("#promptDialog").hide();
+  function unmask() {
+  	$("#mask").hide();
+  }
+  
+  function confirm(title, description, destructiveText, handler) {  	
+  	showModal(title, description, handler, false, destructiveText);
+  }
+  
+  function promptString(title, description, handler) {
+  	showModal(title, description, handler, true, null);
+  }
+  
+  function showModal(title, description, handler, isPrompt, destructiveText) {  
+  	
+  	mask();
+
+	// set our callback for when the dialog is accepted
+  	modalHandler = handler;
+
+	// set up our buttons
+	var ok = $("#modalOk");
+	
+	if (destructiveText) {
+		ok.removeClass("primary");
+		ok.addClass("danger");
+		ok.text(destructiveText);
+	} else {
+		ok.removeClass("danger");
+		ok.addClass("primary");		
+		ok.text("Ok");	
+	}
+	
+	// are we prompting the user for information?
+	if (isPrompt) {  	
+  		$("#promptResult").show();
+  	} else {
+  		$("#promptResult").hide();
+  	}
+  	
+  	// set the title and description if there is one
+  	$("#modalTitle").text(title);    
+    if (description) {
+    	var desc = $("#modalDescription");
+    	desc.html(description);
+    	desc.show();
+    } else {
+		$("#modalDescription").hide();
+	}
+	
+	// show and focus the modal
+  	$("#modalDialog").show();
+  	if (isPrompt) { 
+  		$("#promptResult").focus();
   	}
   }
   
+  function modalPrimary() {
+  	if (modalHandler) {
+  		var promptResult = $("#promptResult")
+  		if (promptResult.is(":visible")) {
+  			modalHandler($("#promptResult").val());
+  		} else {
+  			modalHandler();
+  		}
+  		$("#modalDialog").hide();
+  	}
+  }
+  
+  function modalSecondary() {
+    $("#modalDialog").hide();
+  	unmask();
+  }
+  
   $(document).ready(function() {
-  	$("#promptOk").click(function() {
-  		submitPrompt();
-  	});
-  	
-  	$("#promptCancel").click(function() {
-  		$("#promptDialog").hide();
-  	});
-  	
-  	$("#promptClose").click(function() {
-  		$("#promptDialog").hide();
+  	$("#modalOk").click(function() {
+  		modalPrimary();
   	});
   	
   	$("#promptResult").keypress(function(e){
-      	if(e.which == 13){
-      	   submitPrompt();
-     	}
+  	
+  		// TODO: add class marker for doing
+  		// slug input filtering
+  		
+   		if (e.which == 13) {
+      		modalPrimary();
+      	}
     });
+  	
+  	$("#modalCancel").click(function() {
+  		modalSecondary();
+  	});
+  	
+  	$("#modalClose").click(function() {
+		modalSecondary();
+  	});
+  	
     
   });
   
@@ -133,6 +197,7 @@
 
 {! block extrascript !}
 {! endblock !}
+
 
 </body>
 

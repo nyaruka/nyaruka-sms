@@ -15,6 +15,17 @@ public class FileUtil {
 	public static String slurpStream(InputStream is) {
 		return new Scanner(is).useDelimiter("\\A").next();		
 	}
+
+	public static void delete(File f) {
+		if (f.isDirectory()) {
+			for (File c : f.listFiles()) {
+				delete(c);
+			}
+		}
+		if (!f.delete()) {
+			System.err.println("Couldn't delete " + f);
+		}
+	}
 	
 	/**
 	 * Reads the contents of a file into a string

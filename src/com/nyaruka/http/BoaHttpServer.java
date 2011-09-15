@@ -75,9 +75,6 @@ public class BoaHttpServer extends NanoHTTPD {
 			else if (url.equals("/log")) {
 				response = m_boa.renderLog(request);
 			}
-			else if (url.startsWith("/admin")) {
-				response = m_boa.renderAdmin(request);
-			}
 			else {
 				// first try native apps
 				response = m_boa.handleNativeRequest(request);

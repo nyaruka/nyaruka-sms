@@ -1,4 +1,4 @@
-{! extends "../base.html" !}
+{! extends "base.html" !}
 
 {! block actions !}
 <ul class="secondary-nav">
@@ -9,6 +9,76 @@
     </ul>
   </li> 
 </ul>
+{! endblock !}
+
+{! block content !}
+
+<div class="page-header">
+  <h1><a href="/admin/app/{{ app.namespace }}/">{{ app.namespace }}</a></h1>
+</div>
+
+<div class="row">
+
+  <div class="span6 columns">
+	<table class="zebra-striped">
+      <thead>
+        <tr>
+          <th>Files</th>
+        </tr>
+      </thead>  
+      <tbody>
+      {% for file in files %}
+        <tr>
+          <td>{{ file }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="span1 columns">&nbsp;</div>
+
+  <div class="span6 columns">
+	  <div class="sidebox">
+		  Files are neat
+	  </div>	  
+  </div>
+
+
+</div>
+
+<div class="row">
+
+  <div class="span6 columns">
+	<table class="zebra-striped">
+      <thead>
+        <tr>
+          <th>Collections</th>
+        </tr>
+      </thead>  
+      <tbody>
+      {% for coll in app_collections %}
+        <tr>
+          <td>{{ coll.name }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+	
+  <div class="span1 columns">&nbsp;</div>
+
+  <div class="span6 columns">
+	  <div class="sidebox">
+	  	<b>Quick Tip</b><br/>
+		  It's easy to add a collection to your Boa application, just add a call to <code>ensureCollection("my_coll")</code> to your app's <i>main.js</i> file.<br/><br/>
+		  
+		  You can add as many collections as you like to your application.
+	  </div>	
+  </div>
+
+</div>
+
 {! endblock !}
 
 {! block extrascript !}

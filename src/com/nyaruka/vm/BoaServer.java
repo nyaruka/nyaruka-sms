@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 import net.asfun.jangod.template.TemplateEngine;
 
+import com.nyaruka.app.AppApp;
 import com.nyaruka.app.AuthApp;
 import com.nyaruka.app.DBApp;
 import com.nyaruka.app.NativeApp;
@@ -40,6 +41,7 @@ public abstract class BoaServer {
 		// init our auth app
 		addNativeApp(new AuthApp(this));
 		addNativeApp(new DBApp(m_vm));
+		addNativeApp(new AppApp(this, m_vm));
 	}
 	
 	/** Define out to get the contents of a given path */
@@ -56,6 +58,8 @@ public abstract class BoaServer {
 	
 	/** Remove the app with the give namespace */
 	public abstract void removeApp(String name);
+	
+	public abstract String[] getFiles(BoaApp app);
 	
 	public void start() {
 		List<JSEval> evals = new ArrayList<JSEval>();

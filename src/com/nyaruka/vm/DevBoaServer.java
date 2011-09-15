@@ -98,6 +98,11 @@ public class DevBoaServer extends BoaServer {
 	}
 	
 	public static void main(String[] args) {
+		
+		if (args.length == 0) {
+			System.out.println("Usage: java com.nyaruka.vm.DevBoaServer 8080 [assets]");
+			return;
+		}
 		int port = Integer.parseInt(args[0]);
 		
 		String path = null;
@@ -127,7 +132,14 @@ public class DevBoaServer extends BoaServer {
 		}
 	}
 	
+	@Override
+	public String[] getFiles(BoaApp app) {
+		File dir = new File(getPath("apps"), app.getNamespace());
+		System.out.println(dir.getAbsolutePath());
+		return dir.list();
+	}
 	
 	private String m_rootDir;
+
 
 }

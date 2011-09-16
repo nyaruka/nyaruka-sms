@@ -9,5 +9,5 @@ import com.nyaruka.http.HttpResponse;
  * @author nicp
  */
 public abstract class View {
-	public abstract HttpResponse handle(HttpRequest request);
+	public abstract HttpResponse handle(HttpRequest request, String[] groups);
 }

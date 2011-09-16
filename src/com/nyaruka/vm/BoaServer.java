@@ -105,9 +105,11 @@ public abstract class BoaServer {
 		HttpResponse response = null;
 		
 		// find a view
+		String url = request.url();
 		for (Route route : m_nativeRoutes){
-			if (route.matches(request.url())){
-				response = route.getView().handle(request);
+			String[] groups = route.matches(url);
+			if (groups!= null){
+				response = route.getView().handle(request, groups);
 				break;
 			}
 		}

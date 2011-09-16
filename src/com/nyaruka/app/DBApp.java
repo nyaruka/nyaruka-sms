@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -25,7 +23,7 @@ public class DBApp extends AdminApp {
 	}
 	
 	class IndexView extends View {
-		public HttpResponse handle(HttpRequest r) {
+		public HttpResponse handle(HttpRequest r, String[] groups) {
 			if (r.method().equalsIgnoreCase("POST")){
 				m_vm.getDB().ensureCollection(r.params().getProperty("name"));
 			}
@@ -35,12 +33,8 @@ public class DBApp extends AdminApp {
 	}
 	
 	class CollectionView extends View {
-		Pattern COLLECTION = Pattern.compile("^/db/([a-zA-Z]+)/$");
-		
-		public HttpResponse handle(HttpRequest r) {
-			Matcher matcher = COLLECTION.matcher(r.url());
-			matcher.find();
-			String collName = matcher.group(1);
+		public HttpResponse handle(HttpRequest r, String[] groups) {
+			String collName = groups[0];
 			Collection coll = m_vm.getDB().getCollection(collName);
 			
 			// they are adding a new record
@@ -87,12 +81,8 @@ public class DBApp extends AdminApp {
 	}
 	
 	class DeleteCollectionView extends View {
-		Pattern DELETE_COLLECTION = Pattern.compile("^/db/([a-zA-Z]+)/delete/$");					
-		
-		public HttpResponse handle(HttpRequest request){
-			Matcher matcher = DELETE_COLLECTION.matcher(request.url());
-			matcher.find();
-			String collName = matcher.group(1);
+		public HttpResponse handle(HttpRequest request, String[] groups){
+			String collName = groups[0];
 			Collection coll = m_vm.getDB().getCollection(collName);
 			m_vm.getDB().deleteCollection(coll);
 			return new RedirectResponse("/db/");
@@ -100,15 +90,11 @@ public class DBApp extends AdminApp {
 	}
 	
 	class RecordView extends View {
-		Pattern RECORD = Pattern.compile("^/db/([a-zA-Z]+)/(\\d+)/$");
-		
-		public HttpResponse handle(HttpRequest r) {
-			Matcher matcher = RECORD.matcher(r.url());
-			matcher.find();
-			String collName = matcher.group(1);
+		public HttpResponse handle(HttpRequest r, String[] groups) {
+			String collName = groups[0];
 			Collection coll = m_vm.getDB().getCollection(collName);
 			
-			long id = Long.parseLong(matcher.group(2));
+			long id = Long.parseLong(groups[1]);
 			Record rec = coll.getRecord(id);
 
 			// they are posting new data
@@ -138,30 +124,30 @@ public class DBApp extends AdminApp {
 	}
 	
 	class DeleteRecordView extends View {
-		Pattern DELETE_RECORD = Pattern.compile("^/db/([a-zA-Z]+)/(\\d+)/delete/$");		
-		
-		public HttpResponse handle(HttpRequest r) {
-			Matcher matcher = DELETE_RECORD.matcher(r.url());
-			matcher.find();
-			String collName = matcher.group(1);
-
+		public HttpResponse handle(HttpRequest r, String[] groups) {
+			String collName = groups[0];
 			Collection coll = m_vm.getDB().getCollection(collName);
 			
 			if (r.method() == "POST"){
-				long id = Long.parseLong(matcher.group(2));
-				Record rec = coll.getRecord(id);			
+				long id = Long.parseLong(groups[1]);
 				coll.delete(id);
 			}
 			return new RedirectResponse("/db/" + coll.getName() + "/");
 		}
 	}
-		
+
+	static final String COLLECTION = "^/db/([a-zA-Z]+)/$";
+	static final String DELETE_COLLECTION = "^/db/([a-zA-Z]+)/delete/$";						
+	static final String DELETE_RECORD = "^/db/([a-zA-Z]+)/(\\d+)/delete/$";
+	static final String RECORD = "^/db/([a-zA-Z]+)/(\\d+)/$";
+	static final String INDEX = "^/db/$";
+			
 	@Override
 	public void buildRoutes() {
-		addRoute("^/db/$", new IndexView());
-		addRoute("^/db/([a-zA-Z]+)/$", new CollectionView());
-		addRoute("^/db/([a-zA-Z]+)/(\\d+)/$", new RecordView());
-		addRoute("^/db/([a-zA-Z]+)/(\\d+)/delete/$", new DeleteRecordView());		
-		addRoute("^/db/([a-zA-Z]+)/delete/$", new DeleteCollectionView());				
+		addRoute(INDEX, new IndexView());
+		addRoute(COLLECTION, new CollectionView());
+		addRoute(RECORD, new RecordView());
+		addRoute(DELETE_RECORD, new DeleteRecordView());		
+		addRoute(DELETE_COLLECTION, new DeleteCollectionView());				
 	}
 }

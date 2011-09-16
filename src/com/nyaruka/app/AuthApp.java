@@ -17,7 +17,7 @@ public class AuthApp extends NativeApp {
 	
 	class LoginView extends View {
 		@Override
-		public HttpResponse handle(HttpRequest request) {
+		public HttpResponse handle(HttpRequest request, String[] groups) {
 			return new HttpResponse("<html>hello world</html>");
 		}
 	}

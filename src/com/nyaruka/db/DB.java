@@ -204,6 +204,10 @@ public abstract class DB {
 	}
 	
 	public ArrayList<Collection> getCollections(){
+		if (m_collections == null){
+			load();
+		}
+		
 		ArrayList<Collection> collections = new ArrayList<Collection>();
 		for (Collection coll : m_collections.values()){
 			collections.add(coll);

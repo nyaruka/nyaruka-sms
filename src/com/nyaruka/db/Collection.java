@@ -166,6 +166,7 @@ public class Collection {
 	}
 	
 	public String getName(){ return m_name; }
+	public String toString(){ return "Collection[" + m_name + "]"; }
 		
 	private DB m_db;
 	private int m_id;

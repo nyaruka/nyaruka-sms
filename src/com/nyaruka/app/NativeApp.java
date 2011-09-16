@@ -27,31 +27,10 @@ public abstract class NativeApp {
 	public List<Route> getRoutes(){ return m_routes; }
 	public void addRoute(String regex, View view){ m_routes.add(new Route(regex, view)); }
 	
-	public Route findRoute(String path){
-		for (Route route : m_routes){
-			if (route.matches(path)){
-				return route;
-			}
-		}
-		return null;
-	}
-	
 	/**
 	 * To be overloaded by our subclass.  This is where we wire all our routes.
 	 */
 	public abstract void buildRoutes();
-	
-	/**
-	 * Entry point for requests. 
-	 */
-	public HttpResponse handle(HttpRequest request){
-		Route route = findRoute(request.url());
-		if (route != null){
-			return route.getView().handle(request);
-		} else {
-			return null;
-		}
-	}
 	
 	/** 
 	 * Builds a regular expression for this app and action.

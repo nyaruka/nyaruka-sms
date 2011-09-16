@@ -1,7 +1,5 @@
 package com.nyaruka.app;
 
-import java.util.List;
-
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
 
@@ -12,7 +10,7 @@ public class NativeAppTest extends TestCase {
 	static class TestView extends View {
 		public boolean called = false;
 		
-		public HttpResponse handle(HttpRequest request) {
+		public HttpResponse handle(HttpRequest request, String[] groups) {
 			called = true;
 			return new HttpResponse("test");
 		}
@@ -27,20 +25,15 @@ public class NativeAppTest extends TestCase {
 		}
 	}
 	
-	public void testGetAction(){
+	public void testGetRoutes(){
 		NativeApp app = new TestApp();
 		View loginView = new TestView();
 		app.addRoute(app.buildActionRegex("login"), loginView);
-		
-		assertEquals(loginView, app.findRoute("/auth/login/").getView());
-		assertEquals(loginView, app.findRoute("/auth/login/nicpottier/").getView());
-		assertNull(app.findRoute("/db/foo/"));
-		assertNull(app.findRoute("/auth/"));		
+		assertEquals(1, app.getRoutes().size());
 		
 		View indexView = new TestView();
 		app.addRoute("/auth/", indexView);
 		
-		assertEquals(indexView, app.findRoute("/auth/").getView());
-		assertEquals(loginView, app.findRoute("/auth/login/").getView());		
+		assertEquals(2, app.getRoutes().size());
 	}
 }

@@ -59,7 +59,13 @@ public abstract class BoaServer {
 	/** Remove the app with the give namespace */
 	public abstract void removeApp(String name);
 	
+	/** Get all the files for a given app */
 	public abstract String[] getFiles(BoaApp app);
+
+	/** Create a new file in the given app */
+	public abstract void createFile(BoaApp app, String fileName, boolean isCode);
+
+	
 	
 	public void start() {
 		List<JSEval> evals = new ArrayList<JSEval>();
@@ -285,4 +291,5 @@ public abstract class BoaServer {
 	
 	/** And their routes */
 	private ArrayList<Route> m_nativeRoutes = new ArrayList<Route>();
+
 }

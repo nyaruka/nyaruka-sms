@@ -46,10 +46,29 @@
 {! block beforecontent !}
 {! endblock !}
 
+ <div id="modalDialog" class="modal" style="width:380px;display:none; position: absolute; top: 80; margin: 0 auto; z-index: 9999"> 
+	<div class="modal-header"> 
+    <h3 id="modalTitle">Modal Heading</h3> 
+    <a href="#" id="modalClose" class="close">&times;</a> 
+    </div> 
+    <div class="modal-body">          	
+  	<p id="modalDescription"></p>
+  	<input id="promptResult" class="xlarge" style="margin:0 auto;height:30px" type="text" size="30">            
+    </div> 
+    <div class="modal-footer"> 
+      <a href="#" id="modalOk" class="btn primary">Ok</a> 
+      <a href="#" id="modalCancel" class="btn secondary">Cancel</a> 
+    </div> 
+ </div> 
+        
 <div id="content">
 	{! block content !}
 	{! endblock !}
-	<div id="mask"/>
+	
+       
+	<div id="mask">
+	
+	</div>
 </div>
 
 
@@ -57,20 +76,7 @@
 {! endblock !}
 
 
-        <div id="modalDialog" class="modal" style="width:310px;display:none;position: relative; top: auto; left: auto; margin: 0 auto; z-index: 1"> 
-          <div class="modal-header"> 
-            <h3 id="modalTitle">Modal Heading</h3> 
-            <a href="#" id="modalClose" class="close">&times;</a> 
-          </div> 
-          <div class="modal-body">          	
-          	<p id="modalDescription"></p>
-          	<input id="promptResult" class="xlarge" style="margin:0 auto;height:30px" type="text" size="30">            
-          </div> 
-          <div class="modal-footer"> 
-            <a href="#" id="modalOk" class="btn primary">Ok</a> 
-            <a href="#" id="modalCancel" class="btn secondary">Cancel</a> 
-          </div> 
-        </div> 
+
 
 
 <script src="/static/js/jquery-1.6.2.min.js" type="text/javascript" charset="utf-8"></script>
@@ -111,6 +117,9 @@
 
 	// set our callback for when the dialog is accepted
   	modalHandler = handler;
+
+    var left = ($(window).width() - $("#modalDialog").width()) / 2;
+    $("#modalDialog").css({left: left});
 
 	// set up our buttons
 	var ok = $("#modalOk");

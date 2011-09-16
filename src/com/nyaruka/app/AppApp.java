@@ -1,6 +1,9 @@
 package com.nyaruka.app;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,18 +46,52 @@ public class AppApp extends AdminApp {
 
 			HashMap<String,Object> context = getAdminContext();
 			Pattern APP = Pattern.compile("^/admin/app/([a-zA-Z]+)/$");
-
 			Matcher matcher = APP.matcher(r.url());
 			if (matcher.find()) {
-				String appName = matcher.group(1);						
+				
+				String appName = matcher.group(1);
+				BoaApp app = m_vm.getApp(appName);		
+
 				if (r.method().equalsIgnoreCase("POST")){
-					m_server.removeApp(appName);
-					return new RedirectResponse("/admin/app/");
+					
+					// removing an app
+					if (r.params().containsKey("remove")) {
+						m_server.removeApp(appName);
+						return new RedirectResponse("/admin/app/");
+					}
+					
+					// adding a new file
+					if (r.params().containsKey("file_name")) {
+						
+						boolean isCode = false;						
+						String filename = r.params().getProperty("file_name");
+						
+						if (r.params().get("is_code").equals("1")) {
+							isCode = true;
+							if (!filename.endsWith(".js")) {
+								filename += ".js";
+							}
+						} else {
+							if (!filename.endsWith(".html")) {
+								filename += ".html";
+							}							
+						}
+						
+						m_server.createFile(app, filename, isCode);
+					}					
 				}
 
-				BoaApp app = m_vm.getApp(appName);		
-				context.put("app", app);			
-				context.put("files", m_server.getFiles(app));
+				context.put("app", app);		
+				
+				String[] files = m_server.getFiles(app);
+				List<AppFile> appFiles = new ArrayList<AppFile>();
+				for (String path : files) {
+					appFiles.add(new AppFile(path));
+				}
+				
+				Collections.sort(appFiles);
+				
+				context.put("files", appFiles);				
 				return new TemplateResponse("app/view.html", context);								
 			}
 			

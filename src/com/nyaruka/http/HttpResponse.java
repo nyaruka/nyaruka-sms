@@ -70,7 +70,7 @@ public class HttpResponse {
 		cookie.append(key);
 		cookie.append("=");
 		cookie.append(m_cookies.get(key));
-		cookie.append("; expires=");
+		cookie.append("; Path=/; expires=");
 		cookie.append("Sat, 03 May 2025 17:44:22 GMT");
 		return cookie.toString();
 	}

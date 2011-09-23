@@ -1,7 +1,7 @@
 {! extends "../base.html" !}
 
 {! block aftercontent !}
-<div id="editor_window" class="modal" style="display: none">
+<div id="editor_window" class="modal hide"> <!--  style="display: none">-->
   <div class="modal-header">
     <h3 id="editor_title">Edit Record</h3>
   </div>
@@ -14,7 +14,7 @@
 {
   "first": "John",
   "last": "Doe",
-  "age": 32,
+  "age": 32
 }</pre>
       <p>Unique numerical  ids are automatically created for new records as they are inserted.</p>
     </div>
@@ -29,5 +29,60 @@
 <form method="post" id="form">
   <input type="hidden" value="" name="json" id="json"></input>
 </form>
+
+{! endblock !}
+
+{! block extrascript2 !}
+<script>
+var editor = null;
+
+function showEditor(title){
+  $("#editor_title").text(title);
+
+  $("#editor_window").css({ left: $(window).width()/2 - 225 });
+  $("#editor_window").modal({ backdrop: true, keyboard: true, show: true });
+
+  if (!editor){
+    var opts = { indent_size: 1, indent_char: '\t' };
+    res = js_beautify($("#editor").text(), opts)
+    $("#editor").text(res);
+
+    editor = ace.edit("editor");
+    editor.setShowPrintMargin(false);
+    var JSONMode = require("ace/mode/json").Mode;
+    editor.getSession().setMode(new JSONMode());
+
+    var text = editor.getSession().getValue();
+    if (text.length == 0){
+      editor.getSession().setValue("{\n\n}");
+      editor.gotoLine(2);
+    }
+    editor.focus();
+  }
+}
+
+$(document).ready(function(){
+  $("#cancel_button").click(function(event){
+    event.preventDefault();
+    $("#editor_window").modal("hide");
+  });
+
+  $("#save_button").click(function(event){
+    try {
+      // this will throw if their json is invalid
+      JSON.parse(editor.getSession().getValue());
+      $("#json").val(editor.getSession().getValue());
+      $("#form").submit();
+    } catch(e) {
+      // warn them if so
+      alert("Your JSON contains a syntax error, please try again.");
+      editor.focus();
+    }
+    event.preventDefault(); 
+    $("#editor_window").modal("hide");
+  });
+});
+
+</script>
 {! endblock !}
 

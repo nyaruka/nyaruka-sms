@@ -26,9 +26,9 @@ public class Route {
 		Matcher matcher = m_pattern.matcher(url);
 		if (matcher.find()){
 			// build our groups
-			String[] groups = new String[matcher.groupCount()];
+			String[] groups = new String[matcher.groupCount()+1];
 			for(int i=0; i<groups.length; i++){
-				groups[i] = matcher.group(i=1);
+				groups[i] = matcher.group(i);
 			}
 			
 			return groups;

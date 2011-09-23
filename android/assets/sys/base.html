@@ -68,21 +68,20 @@
 {! endblock !}
 
 
-        <div id="modalDialog" class="modal" style="width:310px;display:none;position: relative; top: auto; left: auto; margin: 0 auto; z-index: 1"> 
-          <div class="modal-header"> 
-            <h3 id="modalTitle">Modal Heading</h3> 
-            <a href="#" id="modalClose" class="close">&times;</a> 
-          </div> 
-          <div class="modal-body">          	
-          	<p id="modalDescription"></p>
-          	<input id="promptResult" class="xlarge" style="margin:0 auto;height:30px" type="text" size="30">            
-          </div> 
-          <div class="modal-footer"> 
-            <a href="#" id="modalOk" class="btn primary">Ok</a> 
-            <a href="#" id="modalCancel" class="btn secondary">Cancel</a> 
-          </div> 
-        </div> 
-
+<div id="modalDialog" class="modal hide fade">
+  <div class="modal-header">
+    <a href="#" id="modalClose" class="close">&times;</a> 
+    <h3 id="modalTitle">Modal Heading</h3> 
+  </div> 
+  <div class="modal-body">          	
+    <p id="modalDescription"></p>
+    <input id="promptResult" class="xlarge" style="margin:0 auto;height:30px" type="text" size="30">            
+  </div> 
+  <div class="modal-footer"> 
+    <a href="#" id="modalOk" class="btn primary">Ok</a> 
+    <a href="#" id="modalCancel" class="btn secondary">Cancel</a> 
+  </div> 
+</div> 
 
 <script src="/static/js/jquery-1.6.2.min.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/js/json2.js" type="text/javascript" charset="utf-8"></script>
@@ -90,6 +89,8 @@
 <script src="/static/js/theme-twilight.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/js/mode-json.js" type="text/javascript" charset="utf-8"></script>
 <script src="/static/js/beautify.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/bootstrap-modal.js" type="text/javascript" charset="utf-8"></script>
+
 <script>
  $("body").bind("click", function (e) {
   $('.dropdown-toggle, .menu').parent("li").removeClass("open");
@@ -117,9 +118,6 @@
   }
   
   function showModal(title, description, handler, isPrompt, destructiveText) {  
-  	
-  	mask();
-
 	// set our callback for when the dialog is accepted
   	modalHandler = handler;
 
@@ -145,36 +143,31 @@
   	
   	// set the title and description if there is one
   	$("#modalTitle").text(title);    
-    if (description) {
-    	var desc = $("#modalDescription");
-    	desc.html(description);
+        if (description) {
+    	   var desc = $("#modalDescription");
+      	desc.html(description);
     	desc.show();
     } else {
 		$("#modalDescription").hide();
 	}
-	
-	// show and focus the modal
-  	$("#modalDialog").show();
-  	if (isPrompt) { 
-  		$("#promptResult").focus();
-  	}
+
+      $("#modalDialog").modal({ backdrop: true, keyboard: true, show: true });
   }
   
   function modalPrimary() {
-  	if (modalHandler) {
-  		var promptResult = $("#promptResult")
-  		if (promptResult.is(":visible")) {
-  			modalHandler($("#promptResult").val());
-  		} else {
-  			modalHandler();
-  		}
-  		$("#modalDialog").hide();
-  	}
+      if (modalHandler) {
+  	  var promptResult = $("#promptResult")
+  	  if (promptResult.is(":visible")) {
+  	      modalHandler($("#promptResult").val());
+  	  } else {
+  	      modalHandler();
+  	  }
+  	  $("#modalDialog").modal("hide");
+      }
   }
   
   function modalSecondary() {
-    $("#modalDialog").hide();
-  	unmask();
+      $("#modalDialog").modal("hide");
   }
   
   $(document).ready(function() {
@@ -207,6 +200,9 @@
 </script>
 
 {! block extrascript !}
+{! endblock !}
+
+{! block extrascript2 !}
 {! endblock !}
 
 

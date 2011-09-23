@@ -34,7 +34,7 @@ public class DBApp extends AdminApp {
 	
 	class CollectionView extends View {
 		public HttpResponse handle(HttpRequest r, String[] groups) {
-			String collName = groups[0];
+			String collName = groups[1];
 			Collection coll = m_vm.getDB().getCollection(collName);
 			
 			// they are adding a new record
@@ -81,20 +81,22 @@ public class DBApp extends AdminApp {
 	}
 	
 	class DeleteCollectionView extends View {
-		public HttpResponse handle(HttpRequest request, String[] groups){
-			String collName = groups[0];
-			Collection coll = m_vm.getDB().getCollection(collName);
-			m_vm.getDB().deleteCollection(coll);
+		public HttpResponse handle(HttpRequest r, String[] groups){
+			if (r.method().equals(r.POST)){
+				String collName = groups[1];
+				Collection coll = m_vm.getDB().getCollection(collName);
+				m_vm.getDB().deleteCollection(coll);
+			}
 			return new RedirectResponse("/db/");
 		}
 	}
 	
 	class RecordView extends View {
 		public HttpResponse handle(HttpRequest r, String[] groups) {
-			String collName = groups[0];
+			String collName = groups[1];
 			Collection coll = m_vm.getDB().getCollection(collName);
 			
-			long id = Long.parseLong(groups[1]);
+			long id = Long.parseLong(groups[2]);
 			Record rec = coll.getRecord(id);
 
 			// they are posting new data
@@ -125,11 +127,11 @@ public class DBApp extends AdminApp {
 	
 	class DeleteRecordView extends View {
 		public HttpResponse handle(HttpRequest r, String[] groups) {
-			String collName = groups[0];
+			String collName = groups[1];
 			Collection coll = m_vm.getDB().getCollection(collName);
 			
-			if (r.method() == "POST"){
-				long id = Long.parseLong(groups[1]);
+			if (r.method().equals(r.POST)){
+				long id = Long.parseLong(groups[2]);
 				coll.delete(id);
 			}
 			return new RedirectResponse("/db/" + coll.getName() + "/");

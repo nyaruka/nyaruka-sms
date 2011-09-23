@@ -1,7 +1,5 @@
 package com.nyaruka.app;
 
-import java.util.HashMap;
-
 import com.nyaruka.vm.VM;
 
 public abstract class AdminApp extends NativeApp {

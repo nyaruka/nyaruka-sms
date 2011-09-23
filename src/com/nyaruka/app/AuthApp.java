@@ -37,10 +37,31 @@ public class AuthApp extends NativeApp {
 			return hashed.equals(m_data.getString("password"));
 		}
 		
+		public boolean hasPermission(String permission){
+			return false;
+		}
+		
 		public String getUsername(){ return m_data.getString("username"); }
 		public JSON getData(){ return m_data; }
 		
 		private JSON m_data;
+	}
+	
+	public static class AuthException extends RuntimeException {
+		public AuthException(String returnURL){
+			this(returnURL, "You must be logged in to access this page.");
+		}
+		
+		public AuthException(String returnURL, String error){
+			m_returnURL = returnURL;
+			m_error = error;
+		}
+		
+		public String getReturnURL(){ return m_returnURL; }
+		private String m_returnURL;
+		
+		public String getError(){ return m_error; }
+		private String m_error;
 	}
 	
 	public AuthApp(VM vm){
@@ -103,6 +124,7 @@ public class AuthApp extends NativeApp {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups) {
 			ResponseContext context = new ResponseContext();
+			context.put("error", request.params().get("error"));
 			
 			if (request.method().equals(request.POST)){
 				String username = request.params().getProperty("username");
@@ -114,14 +136,20 @@ public class AuthApp extends NativeApp {
 					// set our user in our session
 					request.session().setUser(username);
 					request.setUser(u);
+
+								
+					// do we have a return URL?
+					String returnURL = request.params().get("return").toString();
+					if (returnURL == null) returnURL = "/";
 					
 					// if so, redirect to our index
-					return new RedirectResponse("/");
+					return new RedirectResponse(returnURL);
 				} else {
 					context.put("username", username);
 					context.put("error", "Incorrect username or password");
 				}
 			}
+			
 			return new TemplateResponse("auth/login.html", context);
 		}
 	}
@@ -143,13 +171,25 @@ public class AuthApp extends NativeApp {
 	 */
 	public HttpResponse preProcess(HttpRequest request){
 		// see if there is a user in this session
-		System.out.println("session: "+ request.session());
-		
 		String sessionUser = request.session().getUser();
 		if (sessionUser != null){
 			request.setUser(lookupUser(sessionUser));
 		}
 		
+		return null;
+	}
+	
+	/**
+	 * Let's us catch authentication exceptions and have the user be redirected 
+	 * to the login page.
+	 * 
+	 * @param t
+	 */
+	public HttpResponse handleError(Throwable t){
+		if (t instanceof AuthException){
+			AuthException ae = (AuthException) t;
+			return new RedirectResponse("/auth/login/?return=" + ae.getReturnURL() + "&error=" + ae.getError());
+		}
 		return null;
 	}
 

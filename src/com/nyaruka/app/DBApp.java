@@ -1,7 +1,6 @@
 package com.nyaruka.app;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -22,7 +21,7 @@ public class DBApp extends AdminApp {
 		super("db", vm);
 	}
 	
-	class IndexView extends View {
+	class IndexView extends AuthView {
 		public HttpResponse handle(HttpRequest r, String[] groups) {
 			if (r.method().equalsIgnoreCase("POST")){
 				m_vm.getDB().ensureCollection(r.params().getProperty("name"));
@@ -32,7 +31,7 @@ public class DBApp extends AdminApp {
 		}
 	}
 	
-	class CollectionView extends View {
+	class CollectionView extends AuthView {
 		public HttpResponse handle(HttpRequest r, String[] groups) {
 			String collName = groups[1];
 			Collection coll = m_vm.getDB().getCollection(collName);
@@ -80,7 +79,7 @@ public class DBApp extends AdminApp {
 		}
 	}
 	
-	class DeleteCollectionView extends View {
+	class DeleteCollectionView extends AuthView {
 		public HttpResponse handle(HttpRequest r, String[] groups){
 			if (r.method().equals(r.POST)){
 				String collName = groups[1];
@@ -91,7 +90,7 @@ public class DBApp extends AdminApp {
 		}
 	}
 	
-	class RecordView extends View {
+	class RecordView extends AuthView {
 		public HttpResponse handle(HttpRequest r, String[] groups) {
 			String collName = groups[1];
 			Collection coll = m_vm.getDB().getCollection(collName);
@@ -125,7 +124,7 @@ public class DBApp extends AdminApp {
 		}
 	}
 	
-	class DeleteRecordView extends View {
+	class DeleteRecordView extends AuthView {
 		public HttpResponse handle(HttpRequest r, String[] groups) {
 			String collName = groups[1];
 			Collection coll = m_vm.getDB().getCollection(collName);

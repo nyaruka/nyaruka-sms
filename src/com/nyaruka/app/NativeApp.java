@@ -58,4 +58,14 @@ public abstract class NativeApp {
 	public HttpResponse postProcess(HttpRequest request, HttpResponse response){
 		return null;
 	}
+	
+	/** 
+	 * Middleware-like hook for Native Apps which allows them to manipulate a response
+	 * if an exception is thrown. 
+	 * 
+	 * @param error The error that occurred
+	 */
+	public HttpResponse handleError(Throwable error){
+		return null;
+	}
 }

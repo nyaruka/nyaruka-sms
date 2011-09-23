@@ -39,7 +39,7 @@ public abstract class NativeAppTestCase extends TestCase {
 		for (Route route : app.getRoutes()){
 			String[] groups = route.matches(request.url());
 			if (groups != null){
-				response = route.getView().handle(request, groups);
+				response = route.getView().handleRequest(request, groups);
 			}
 		}
 		

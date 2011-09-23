@@ -99,6 +99,10 @@ public class HttpRequest {
 		m_cookies = cookies;
 	}
 	
+	public String toString(){
+		return m_method + " " + m_url;
+	}
+	
 	private String m_url;
 	private String m_method;
 	private Properties m_params;

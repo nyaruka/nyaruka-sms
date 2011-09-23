@@ -19,7 +19,7 @@ import com.nyaruka.vm.VM;
  * 
  * @author nicp
  */
-public class AuthApp extends NativeApp {
+public class AuthApp extends AdminApp {
 
 	public static class User {
 		public User(Record r){
@@ -109,7 +109,7 @@ public class AuthApp extends NativeApp {
 	}
 	
 	public AuthApp(VM vm){
-		super("auth");
+		super("auth", vm);
 		m_vm = vm;
 	}
 	
@@ -158,7 +158,7 @@ public class AuthApp extends NativeApp {
 	class IndexView extends AuthView {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups) {
-			ResponseContext context = new ResponseContext();
+			ResponseContext context = getAdminContext();
 			User user = request.user();
 			
 			if (user != null){
@@ -178,7 +178,7 @@ public class AuthApp extends NativeApp {
 	class CreateView extends AuthView {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups) {
-			ResponseContext context = new ResponseContext();
+			ResponseContext context = getAdminContext();
 			
 			if (request.method().equals(request.POST)){
 				String username = request.params().getProperty("username");
@@ -209,7 +209,7 @@ public class AuthApp extends NativeApp {
 	class EditView extends AuthView {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups) {
-			ResponseContext context = new ResponseContext();
+			ResponseContext context = getAdminContext();
 			User user = lookupUser(groups[1]);
 			if (user == null){
 				context.put("error", "No user found with the username '" + groups[1] + "'");
@@ -277,6 +277,8 @@ public class AuthApp extends NativeApp {
 	 * our session contains a logged in user.
 	 */
 	public HttpResponse preProcess(HttpRequest request){
+		System.out.println(request.session());
+		
 		// see if there is a user in this session
 		String sessionUser = request.session().getUser();
 		if (sessionUser != null){

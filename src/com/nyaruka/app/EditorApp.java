@@ -6,6 +6,8 @@ import java.util.List;
 
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
+import com.nyaruka.http.RequestParameters;
+import com.nyaruka.util.FileUtil;
 import com.nyaruka.vm.BoaApp;
 import com.nyaruka.vm.BoaServer;
 import com.nyaruka.vm.VM;
@@ -25,14 +27,14 @@ public class EditorApp extends AdminApp {
 			ResponseContext context = getAdminContext();
 
 			BoaApp app = m_vm.getApp(groups[1]);
+			RequestParameters params = request.params();
 			
 			// save our active file to disk
-			String openFile = request.params().getProperty("open");
-			String openFilePath = "apps/" + app.getNamespace() + "/" + openFile;
 			
-			if (request.method().equals("POST")) {	
-				// String contents = request.params().getProperty("contents");				
-				// FileUtil.writeStream(m_server.getOutputStream(openFilePath), contents);
+			if (request.method().equals("POST") && params.containsKey("save_file")) {
+				String saveFile = "apps/" + app.getNamespace() + "/" + params.getProperty("save_file");
+				String contents = request.params().getProperty("contents");				
+				FileUtil.writeStream(m_server.getOutputStream(saveFile), contents);
 			}
 			
 			// get the list of all the files for our app for our dropdown
@@ -50,8 +52,7 @@ public class EditorApp extends AdminApp {
 			}			
 			Collections.sort(appFiles);
 			
-			context.put("app", app);			
-			context.put("openFile", openFile);
+			context.put("app", app);
 			context.put("files", appFiles);				
 			
 			return new TemplateResponse("editor/editor.html", context);

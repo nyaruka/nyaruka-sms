@@ -167,6 +167,13 @@ function getTab(id) {
 	return null;
 }
 
+function getActiveTab() {
+	if (open_file) {
+		return getTab(open_file);
+	}
+	return null;
+}
+
 function renderTabs() {
 	var renderedTabs = $(".nav").children();
 	for (var idx in tabs) {
@@ -193,15 +200,21 @@ function renderTab(tab) {
 }
 
 function saveFile() {
+	
+	var tab = getActiveTab();
+
 	$.ajax({
   		type: 'POST',
-  		data: { 'contents' : editor.getSession().getValue() },
+  		data: { 'contents' : editor.getSession().getValue(),
+  				'save_file' : tab.name 
+  		},
   		success: function() {
   			
   			if (test_browser) {
   				test_browser.location.href = test_browser.location.href;
   			}
-  			console.log("Success!");
+  			tab.modified = false;
+  			renderTab(tab);
   		},
   		failure: function() { console.log("failure.");}  		
 	});

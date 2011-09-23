@@ -1,16 +1,11 @@
 package com.nyaruka.app;
 
-import java.io.File;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
-import com.nyaruka.util.FileUtil;
 import com.nyaruka.vm.BoaApp;
 import com.nyaruka.vm.BoaServer;
 import com.nyaruka.vm.VM;
@@ -29,7 +24,7 @@ public class EditorApp extends AdminApp {
 			
 			ResponseContext context = getAdminContext();
 
-			BoaApp app = m_vm.getApp(groups[0]);
+			BoaApp app = m_vm.getApp(groups[1]);
 			
 			// save our active file to disk
 			String openFile = request.params().getProperty("open");

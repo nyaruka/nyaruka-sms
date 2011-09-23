@@ -46,7 +46,7 @@ public class AppApp extends AdminApp {
 
 			ResponseContext context = getAdminContext();
 				
-			BoaApp app = m_vm.getApp(groups[0]);		
+			BoaApp app = m_vm.getApp(groups[1]);		
 
 			if (r.method().equalsIgnoreCase("POST")){
 				
@@ -62,7 +62,7 @@ public class AppApp extends AdminApp {
 					boolean isCode = false;						
 					String filename = r.params().getProperty("file_name");
 					
-					if (r.params().get("is_code").equals("1")) {
+					if (r.params().getProperty("is_code").equals("1")) {
 						isCode = true;
 						if (!filename.endsWith(".js")) {
 							filename += ".js";

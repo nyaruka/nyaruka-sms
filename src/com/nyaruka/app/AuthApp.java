@@ -23,11 +23,18 @@ public class AuthApp extends NativeApp {
 
 	public static class User {
 		public User(Record r){
-			m_username = r.getData().getString("username");
-			m_password = r.getData().getString("password");
-			m_salt = r.getData().getString("salt");
+			JSON record = r.getData();
+			m_username = record.getString("username");
+			m_password = record.getString("password");
+			m_salt = record.getString("salt");
+			if (record.has("name")){
+				m_name = record.getString("name");
+			}
+			if (record.has("email")){
+				m_email = record.getString("email");
+			}
 			
-			if (r.getData().has("data")){
+			if (record.has("data")){
 				m_data = r.getData().getJSON("data");
 			} else {
 				m_data = new JSON();
@@ -58,6 +65,8 @@ public class AuthApp extends NativeApp {
 			JSON json = new JSON();
 			json.put("username", m_username);
 			json.put("password", m_password);
+			json.put("email", m_email);
+			json.put("name", m_name);
 			json.put("salt", m_salt);
 			json.put("data", m_data);
 			
@@ -68,11 +77,18 @@ public class AuthApp extends NativeApp {
 			return json;
 		}
 		
+		public String getEmail(){ return m_email; }
+		public String getName(){ return m_name; }
+		public void setEmail(String email){ m_email = email; }
+		public void setName(String name){ m_name = name; }
+		
 		private long m_id;
 		private JSON m_data;
 		private String m_username;
 		private String m_password;
 		private String m_salt;
+		private String m_name;
+		private String m_email;
 	}
 	
 	public static class AuthException extends RuntimeException {
@@ -139,7 +155,7 @@ public class AuthApp extends NativeApp {
 		}
 	}
 	
-	class IndexView extends View {
+	class IndexView extends AuthView {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups) {
 			ResponseContext context = new ResponseContext();
@@ -159,6 +175,37 @@ public class AuthApp extends NativeApp {
 		}
 	}
 	
+	class CreateView extends AuthView {
+		@Override
+		public HttpResponse handle(HttpRequest request, String[] groups) {
+			ResponseContext context = new ResponseContext();
+			
+			if (request.method().equals(request.POST)){
+				String username = request.params().getProperty("username");
+				String password = request.params().getProperty("password");
+
+				context.put("username", username);
+				
+				if (username == null || password == null){
+					context.put("error", "You must include a username and password");
+				}
+				else if (password.length() < 8){
+					context.put("error", "The password must be 8 characters or longer");
+				} else{
+					User user = lookupUser(username);
+					if (user != null){
+						context.put("error", "A user with that username already exists");
+					} else {
+						user = createUser(username, password);
+						return new RedirectResponse("/auth/edit/" + username + "/");
+					}
+				}
+			}
+			
+			return new TemplateResponse("auth/create.html", context);
+		}
+	}
+	
 	class EditView extends AuthView {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups) {
@@ -168,11 +215,11 @@ public class AuthApp extends NativeApp {
 				context.put("error", "No user found with the username '" + groups[1] + "'");
 			} else {
 				if (request.method().equals(request.POST)){
-					String name = request.params().getProperty("name");
-					String email = request.params().getProperty("email");
-					user.getData().put("name", name);
-					user.getData().put("email", email);
+					user.setName(request.params().getProperty("name"));
+					user.setEmail(request.params().getProperty("email"));
 					getCollection().save(user.toJSON());
+					
+					return new RedirectResponse("/auth/");
 				}
 			}
 			context.put("user", user);
@@ -184,7 +231,7 @@ public class AuthApp extends NativeApp {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups) {
 			ResponseContext context = new ResponseContext();
-			context.put("error", request.params().get("error"));
+			context.put("error", request.params().getProperty("error"));
 			
 			if (request.method().equals(request.POST)){
 				String username = request.params().getProperty("username");
@@ -199,7 +246,7 @@ public class AuthApp extends NativeApp {
 
 								
 					// do we have a return URL?
-					String returnURL = request.params().get("return").toString();
+					String returnURL = request.params().getProperty("return");
 					if (returnURL == null) returnURL = "/";
 					
 					// if so, redirect to our index
@@ -257,6 +304,7 @@ public class AuthApp extends NativeApp {
 	public void buildRoutes() {
 		addRoute(buildActionRegex("login"), new LoginView());
 		addRoute(buildActionRegex("logout"), new LogoutView());		
+		addRoute(buildActionRegex("create"), new CreateView());				
 		addRoute("^/auth/edit/(.*?)/$", new EditView());				
 		addRoute("^/auth/$", new IndexView());		
 	}

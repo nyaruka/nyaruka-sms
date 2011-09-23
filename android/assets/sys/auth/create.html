@@ -2,10 +2,9 @@
 
 {! block content !}
 <div class="page-header">
-  <h1>Edit User</h1>
+  <h1>Create User</h1>
 </div>
 
-{% if user %}
 <div class="row">
   <div class="span5 columns">
     <h2>Users</h2>
@@ -16,24 +15,23 @@
   <div class="span6 columns">
     <form class="form-stacked" method="post">
       <fieldset>
-        <legend>{{ user.username }}</legend>
+        <legend>New User</legend>
         <div class="clearfix">
-          <label for="name">Name</label>
+          <label for="name">Username</label>
           <div class="input">
-            <input class="xlarge" id="name" name="name" size="30" type="text" value="{{user.name}}" />
+            <input class="xlarge" id="username" name="username" size="30" type="text" value="{{username}}" />
           </div>
         </div><!-- /clearfix -->
         <div class="clearfix">
-          <label for="name">Email</label>
+          <label for="name">Password</label>
           <div class="input">
-            <input class="xlarge" id="email" name="email" size="30" type="text" value="{{user.email}}" />
+            <input class="xlarge" id="password" name="password" size="30" type="password" value="" />
           </div>
         </div><!-- /clearfix -->
       </fieldset>
-      <input type="submit" value="Save" class="btn primary" />
+      <input type="submit" value="Create" class="btn primary" />
     </form>
   </div>
 </div>
-{% endif %}
 {! endblock !}
 

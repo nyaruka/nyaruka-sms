@@ -3,7 +3,9 @@ package com.nyaruka.vm;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -138,6 +140,16 @@ public class DevBoaServer extends BoaServer {
 		System.out.println(dir.getAbsolutePath());
 		return dir.list();
 	}
+	
+	
+	@Override
+	public OutputStream getOutputStream(String path) {
+		try {
+			return new FileOutputStream(new File(getPath(path)));
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	@Override
 	public void createFile(BoaApp app, String fileName, boolean isCode) {
@@ -160,7 +172,6 @@ public class DevBoaServer extends BoaServer {
 
 	
 	private String m_rootDir;
-
 
 
 }

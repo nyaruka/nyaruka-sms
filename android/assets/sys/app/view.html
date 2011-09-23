@@ -16,7 +16,7 @@
 {! block content !}
 
 <div class="page-header">
-  <h1><a href="/admin/app/{{ app.namespace }}/">{{ app.namespace }}</a></h1>
+  <h1>{{ app.namespace }}</h1>
 </div>
 
 <div class="row">
@@ -109,7 +109,7 @@
   $(document).ready(function(){
   
      $(".file_row").click(function(){
-        document.location.href = "/admin/editor/{{app.namespace}}/?file=" + $(this).attr("name");
+     	window.open("/admin/editor/{{app.namespace}}/?file=" + $(this).attr("name"),"_editor","resizable=yes, scrollbars=yes, titlebar=yes, width=800, height=900, top=10, left=10");
      });
      
      $("#add_code_button").click(function(event){

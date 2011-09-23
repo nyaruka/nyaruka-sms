@@ -1,46 +1,17 @@
 <html>
 
 <head>
-  <title>{! block title !}BoaSMS{! endblock !}</title>
+  <title>{! block title !}{{filename}}{! endblock !}</title>
   <link rel="stylesheet" href="/static/css/bootstrap-1.2.0.min.css" type="text/css">
+  
+
+  
   {! block extrastyle !}
+  
   {! endblock !} 
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-inner">
-    <div class="container">
-      <h3><a href="/admin/">BoaSMS</a></h3>
-      <ul class="nav">
-        <li class="dropdown">
-          <a href="#" class="dropdown-toggle">Apps</a> 
-          <ul class="dropdown-menu"> 
-            {% for app in apps %}
-            <li><a href="/admin/app/{{ app.namespace }}/">{{ app.namespace }}</a></li> 
-            {% endfor %}
-            <li class="divider"></li> 
-            <li><a href="/admin/app/">All Apps</a></li> 
-          </ul>         
-        </li>
-        <li class="dropdown"> 
-          <a href="#" class="dropdown-toggle">Collections</a> 
-          <ul class="dropdown-menu"> 
-            {% for collection in collections %}
-            <li><a href="/db/{{ collection.name }}/">{{ collection.name }}</a></li> 
-            {% endfor %}
-            <li class="divider"></li> 
-            <li><a href="/db/">All Collections</a></li> 
-          </ul> 
-        </li> 
-      </ul> 
-      {! block actions !}
-      {! endblock !}
-    </div>
-  </div>
-</div>
-
-<div class="container" style="padding-top:70px">
 
 {! block beforecontent !}
 {! endblock !}

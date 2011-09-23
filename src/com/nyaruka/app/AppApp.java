@@ -27,7 +27,7 @@ public class AppApp extends AdminApp {
 	}
 
 	class IndexView extends View {		
-		public HttpResponse handle(HttpRequest r) {
+		public HttpResponse handle(HttpRequest r, String[] groups) {
 			HashMap<String,Object> context = getAdminContext();
 			
 			if (r.method().equalsIgnoreCase("POST")){
@@ -42,60 +42,52 @@ public class AppApp extends AdminApp {
 	}
 	
 	class AppView extends View {		
-		public HttpResponse handle(HttpRequest r) {	
+		public HttpResponse handle(HttpRequest r, String[] groups) {	
 
 			HashMap<String,Object> context = getAdminContext();
-			Pattern APP = Pattern.compile("^/admin/app/([a-zA-Z]+)/$");
-			Matcher matcher = APP.matcher(r.url());
-			if (matcher.find()) {
 				
-				String appName = matcher.group(1);
-				BoaApp app = m_vm.getApp(appName);		
+			BoaApp app = m_vm.getApp(groups[0]);		
 
-				if (r.method().equalsIgnoreCase("POST")){
+			if (r.method().equalsIgnoreCase("POST")){
+				
+				// removing an app
+				if (r.params().containsKey("remove")) {
+					m_server.removeApp(groups[0]);
+					return new RedirectResponse("/admin/app/");
+				}
+				
+				// adding a new file
+				if (r.params().containsKey("file_name")) {
 					
-					// removing an app
-					if (r.params().containsKey("remove")) {
-						m_server.removeApp(appName);
-						return new RedirectResponse("/admin/app/");
+					boolean isCode = false;						
+					String filename = r.params().getProperty("file_name");
+					
+					if (r.params().get("is_code").equals("1")) {
+						isCode = true;
+						if (!filename.endsWith(".js")) {
+							filename += ".js";
+						}
+					} else {
+						if (!filename.endsWith(".html")) {
+							filename += ".html";
+						}							
 					}
 					
-					// adding a new file
-					if (r.params().containsKey("file_name")) {
-						
-						boolean isCode = false;						
-						String filename = r.params().getProperty("file_name");
-						
-						if (r.params().get("is_code").equals("1")) {
-							isCode = true;
-							if (!filename.endsWith(".js")) {
-								filename += ".js";
-							}
-						} else {
-							if (!filename.endsWith(".html")) {
-								filename += ".html";
-							}							
-						}
-						
-						m_server.createFile(app, filename, isCode);
-					}					
-				}
-
-				context.put("app", app);		
-				
-				String[] files = m_server.getFiles(app);
-				List<AppFile> appFiles = new ArrayList<AppFile>();
-				for (String path : files) {
-					appFiles.add(new AppFile(path));
-				}
-				
-				Collections.sort(appFiles);
-				
-				context.put("files", appFiles);				
-				return new TemplateResponse("app/view.html", context);								
+					m_server.createFile(app, filename, isCode);
+				}					
 			}
+
+			context.put("app", app);		
 			
-			return new RedirectResponse("/admin/app/");
+			String[] files = m_server.getFiles(app);
+			List<AppFile> appFiles = new ArrayList<AppFile>();
+			for (String path : files) {
+				appFiles.add(new AppFile(m_server, app, path));
+			}			
+			Collections.sort(appFiles);
+			context.put("files", appFiles);				
+			return new TemplateResponse("app/view.html", context);								
+
 		}
 	}
 	
@@ -103,7 +95,7 @@ public class AppApp extends AdminApp {
 	public void buildRoutes() {
 		addRoute("^/admin/app/([a-zA-Z]+)/$", new AppView());		
 		addRoute("^/admin/app/$", new IndexView());		
-		addRoute("^/admin/", new IndexView());		
+		addRoute("^/admin/$", new IndexView());		
 	}
 	
 	private BoaServer m_server;

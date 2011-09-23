@@ -1,9 +1,22 @@
 package com.nyaruka.app;
 
+import java.io.InputStream;
+
+import com.nyaruka.util.FileUtil;
+import com.nyaruka.vm.BoaApp;
+import com.nyaruka.vm.BoaServer;
+
 public class AppFile implements Comparable {
 
-	public AppFile(String path) {
+	private boolean m_active;
+	private String m_path;
+	private BoaServer m_server;
+	private BoaApp m_app;
+
+	public AppFile(BoaServer server, BoaApp app, String path) {
 		m_path = path;
+		m_server = server;
+		m_app = app;
 	}
 	
 	public boolean isTemplate() {
@@ -14,12 +27,33 @@ public class AppFile implements Comparable {
 		return m_path.endsWith(".js");
 	}
 	
+	public String getId() {
+		return m_path.replace(".", "_");
+	}
+	
 	public String toString() {
 		return m_path;
 	}
 	
-	private String m_path;
-
+	public String getPath() {
+		return m_path;
+	}
+	
+	public void setActive(boolean active) {
+		m_active = active;
+	}
+	
+	public String getContents() {
+		// TODO: Abstract out file access from BoaServer
+		String fullPath = "apps/" + m_app.getNamespace() + "/" + m_path;
+		InputStream is = m_server.getInputStream(fullPath);
+		return FileUtil.slurpStream(is);
+	}
+	
+	public boolean getActive() {
+		return m_active;
+	}
+	
 	@Override
 	public int compareTo(Object o) {
 		if (!(o instanceof AppFile)) {

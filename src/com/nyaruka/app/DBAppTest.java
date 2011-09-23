@@ -8,6 +8,7 @@ import com.nyaruka.db.Collection;
 import com.nyaruka.db.dev.DevDB;
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
+import com.nyaruka.http.RequestParameters;
 import com.nyaruka.vm.JSEval;
 import com.nyaruka.vm.VM;
 
@@ -43,7 +44,7 @@ public class DBAppTest extends TestCase {
 		assertEquals("sessions", colls.get(0).getName());
 		
 		// create a new collection via a post
-		Properties params = new Properties();
+		RequestParameters params = new RequestParameters();
 		params.put("name", "contacts");
 		resp = (TemplateResponse) getResponse(app, new HttpRequest("/db/", "POST", new Properties(), params));
 		context = resp.getContext();		

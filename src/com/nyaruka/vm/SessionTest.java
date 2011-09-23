@@ -6,18 +6,19 @@ import com.nyaruka.db.DB;
 import com.nyaruka.db.dev.DevDB;
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
+import com.nyaruka.http.RequestParameters;
 
 import junit.framework.TestCase;
 
 public class SessionTest extends TestCase {
 
 	public void testCookies(){
-		HttpRequest request = new HttpRequest("", "GET", new Properties(), new Properties());
+		HttpRequest request = new HttpRequest("", "GET", new Properties(), new RequestParameters());
 		assertNull(request.getCookie("foo"));
 		
 		Properties headers = new Properties();
 		headers.setProperty("cookie", "sessionid=abc, csrftoken=efg;");
-		request = new HttpRequest("", "GET", headers, new Properties());
+		request = new HttpRequest("", "GET", headers, new RequestParameters());
 		
 		assertNull(request.getCookie("foo"));
 		assertEquals("abc", request.getCookie("sessionid"));
@@ -36,7 +37,7 @@ public class SessionTest extends TestCase {
 		
 		SessionManager manager = new SessionManager(db);
 		
-		HttpRequest request = new HttpRequest("", "GET", new Properties(), new Properties());
+		HttpRequest request = new HttpRequest("", "GET", new Properties(), new RequestParameters());
 		Session session = manager.ensureSession(request);
 		
 		assertTrue(session.isNew());
@@ -53,7 +54,7 @@ public class SessionTest extends TestCase {
 		// new request should now get us the same session and data
 		Properties headers = new Properties();
 		headers.put("cookie", SessionManager.SESSION_KEY + "=" + sessionKey);
-		request = new HttpRequest("", "GET", headers, new Properties());
+		request = new HttpRequest("", "GET", headers, new RequestParameters());
 		
 		session = manager.ensureSession(request);
 		
@@ -66,7 +67,7 @@ public class SessionTest extends TestCase {
 		session.clear("user");
 		manager.save(session);
 		
-		request = new HttpRequest("", "GET", headers, new Properties());
+		request = new HttpRequest("", "GET", headers, new RequestParameters());
 		session = manager.ensureSession(request);
 		
 		assertFalse(session.isNew());
@@ -77,7 +78,7 @@ public class SessionTest extends TestCase {
 		// remove the session entirely
 		manager.clearSession(session.getKey());
 		
-		request = new HttpRequest("", "GET", headers, new Properties());
+		request = new HttpRequest("", "GET", headers, new RequestParameters());
 		session = manager.ensureSession(request);
 		
 		assertTrue(session.isNew());

@@ -1,4 +1,4 @@
-	
+							
 db.ensureCollection("contacts");
 db.ensureCollection("labs");
 db.labs.ensureIntIndex("lab_id");
@@ -131,3 +131,9 @@ function handle_msg(req, resp){
 
 router.addHttpHandler('echo', echo);
 router.addHttpHandler('msg', handle_msg);
+
+
+
+
+
+

@@ -1,0 +1,38 @@
+{! extends "../base.html" !}
+
+{! block content !}
+<div class="page-header">
+  <h1>Edit User</h1>
+</div>
+
+{% if user %}
+<div class="row">
+  <div class="span5 columns">
+    <h2>Permissions</h2>
+    <p>You can create users to manage permissions on your site.</p>
+  </div>
+
+  <div class="span6 columns">
+    <form class="form-stacked" method="post">
+      <fieldset>
+        <legend>{{ user.username }}</legend>
+        <div class="clearfix">
+          <label for="name">Name</label>
+          <div class="input">
+            <input class="xlarge" id="name" name="name" size="30" type="text" value="{{user.data.name}}" />
+          </div>
+        </div><!-- /clearfix -->
+        <div class="clearfix">
+          <label for="name">Email</label>
+          <div class="input">
+            <input class="xlarge" id="email" name="email" size="30" type="text" value="{{user.data.email}}" />
+          </div>
+        </div><!-- /clearfix -->
+      </fieldset>
+      <input type="submit" value="Save" class="btn primary" />
+    </form>
+  </div>
+</div>
+{% endif %}
+{! endblock !}
+

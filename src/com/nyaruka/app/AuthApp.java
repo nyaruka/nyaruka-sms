@@ -124,7 +124,7 @@ public class AuthApp extends NativeApp {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups) {
 			ResponseContext context = new ResponseContext();
-			context.put("error", request.params().get("error"));
+			context.put("error", request.params().getProperty("error"));
 			
 			if (request.method().equals(request.POST)){
 				String username = request.params().getProperty("username");
@@ -139,7 +139,7 @@ public class AuthApp extends NativeApp {
 
 								
 					// do we have a return URL?
-					String returnURL = request.params().get("return").toString();
+					String returnURL = request.params().getProperty("return");
 					if (returnURL == null) returnURL = "/";
 					
 					// if so, redirect to our index

@@ -44,7 +44,10 @@ public class EditorApp extends AdminApp {
 			List<AppFile> appFiles = new ArrayList<AppFile>();
 			for (String filePath : allFiles) {
 				AppFile appFile = new AppFile(m_server, app, filePath);
+				
+				int order = openFiles.indexOf(filePath);
 				if (openFiles.contains(filePath)) {
+					appFile.setOrder(order);
 					appFile.setActive(true);
 				}
 				

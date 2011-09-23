@@ -9,6 +9,8 @@ import com.nyaruka.vm.BoaServer;
 public class AppFile implements Comparable {
 
 	private boolean m_active;
+	private int m_order;
+	
 	private String m_path;
 	private BoaServer m_server;
 	private BoaApp m_app;
@@ -43,6 +45,10 @@ public class AppFile implements Comparable {
 		m_active = active;
 	}
 	
+	public void setOrder(int order) {
+		m_order = order;
+	}
+	
 	public String getContents() {
 		// TODO: Abstract out file access from BoaServer
 		String fullPath = "apps/" + m_app.getNamespace() + "/" + m_path;
@@ -61,10 +67,19 @@ public class AppFile implements Comparable {
 		}
 		
 		AppFile other = (AppFile)o;
+		
+		if (other.m_order > m_order) {
+			return -1;
+		} else if (other.m_order < m_order) {
+			return 1;
+		}
+		
 		if (other.isCode()) {
 			return 1;
 		} else {
 			return m_path.compareTo(other.m_path);
 		}		
 	}
+
+	
 }

@@ -27,7 +27,7 @@ public class EditorApp extends AdminApp {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups) {
 			
-			HashMap<String,Object> context = getAdminContext();
+			ResponseContext context = getAdminContext();
 
 			BoaApp app = m_vm.getApp(groups[0]);
 			

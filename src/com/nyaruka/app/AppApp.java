@@ -28,7 +28,7 @@ public class AppApp extends AdminApp {
 
 	class IndexView extends View {		
 		public HttpResponse handle(HttpRequest r, String[] groups) {
-			HashMap<String,Object> context = getAdminContext();
+			ResponseContext context = getAdminContext();
 			
 			if (r.method().equalsIgnoreCase("POST")){
 				String appName = r.params().getProperty("name");
@@ -44,7 +44,7 @@ public class AppApp extends AdminApp {
 	class AppView extends View {		
 		public HttpResponse handle(HttpRequest r, String[] groups) {	
 
-			HashMap<String,Object> context = getAdminContext();
+			ResponseContext context = getAdminContext();
 				
 			BoaApp app = m_vm.getApp(groups[0]);		
 

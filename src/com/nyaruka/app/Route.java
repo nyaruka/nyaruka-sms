@@ -39,4 +39,8 @@ public class Route {
 	
 	public String getRegex(){ return m_regex; }
 	public View getView(){ return m_view; }
+	
+	public String toString(){
+		return m_regex + " -> " + m_view;
+	}
 }

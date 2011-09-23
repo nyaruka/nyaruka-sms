@@ -1,0 +1,9 @@
+{! extends "../base.html" !}
+
+{! block content !}
+{% if user %}
+You are logged in as {{ user.username }}
+{% else %}
+You are not logged in.
+{% endif %}
+{! endblock !}

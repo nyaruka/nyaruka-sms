@@ -1,4 +1,37 @@
+{! extends "../base.html" !}
 
-<html>
-hi
-</html>
+{! block content !}
+
+<div class="row">
+
+  <div class="span6">
+    <form method="POST" class="form-stacked">
+      <fieldset>
+        <div class="clearfix">
+          <label for="username">Username</label>
+          <div class="input">
+            <input id="username" class="xlarge" type="text" name="username" value="{{username}}"/>
+          </div>
+        </div>
+        <div class="clearfix">
+          <label for="password">Password</label>
+          <div class="input">
+            <input id="password" class="xlarge" type="password" name="password" />
+          </div>
+        </div>
+      </fieldset>
+
+      <button type="submit" class="btn primary">Login</button>
+    </form>
+
+  </div>
+
+  <div class="span4">
+    <h2>Log In</h2>
+    You must be authenticated to access this page.
+  </div>
+
+
+</div>
+
+{! endblock !}

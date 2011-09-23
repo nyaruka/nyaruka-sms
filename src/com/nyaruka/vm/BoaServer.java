@@ -38,7 +38,7 @@ public abstract class BoaServer {
 		m_vm = new VM(db);
 		
 		// init our auth app
-		addNativeApp(new AuthApp(this));
+		addNativeApp(new AuthApp(m_vm));
 		addNativeApp(new DBApp(m_vm));
 	}
 	
@@ -94,23 +94,43 @@ public abstract class BoaServer {
 	public HttpResponse handleNativeRequest(HttpRequest request){
 		HttpResponse response = null;
 		
-		// find a view
-		String url = request.url();
-		for (Route route : m_nativeRoutes){
-			String[] groups = route.matches(url);
-			if (groups!= null){
-				response = route.getView().handle(request, groups);
+		// first run through all our pre-processors
+		for (NativeApp app : m_nativeApps){
+			HttpResponse shortcut = app.preProcess(request);
+			if (shortcut != null){
+				response = shortcut;
 				break;
 			}
 		}
 		
+		// if we don't have a response yet, find the route we belong to and run that
+		if (response == null){
+			// find a view
+			String url = request.url();
+			for (Route route : m_nativeRoutes){
+				String[] groups = route.matches(url);
+				if (groups != null){
+					response = route.getView().handle(request, groups);
+					break;
+				}
+			}
+		}
+		
+		// now run our post processor for each of our native apps
+		for (NativeApp app : m_nativeApps){
+			HttpResponse replacement = app.postProcess(request, response);
+			if (replacement != null){
+				response = replacement;
+			}
+		}
+		
+		// render our template
 		if (response instanceof TemplateResponse){
 			TemplateResponse tp = (TemplateResponse) response;
 			tp.setBody(renderTemplate(tp.getTemplate(), tp.getContext()));
 		}
 		
-		
-		// otherwise, nothing found
+		// return our final response
 		return response;
 	}
 

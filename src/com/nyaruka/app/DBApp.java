@@ -72,7 +72,7 @@ public class DBApp extends AdminApp {
 				records.add(record.toJSON().toMap());
 			}
 			
-			HashMap<String, Object> context = getAdminContext();
+			ResponseContext context = getAdminContext();
 			context.put("keys", keys);
 			context.put("collection", coll);
 			context.put("records", records);
@@ -113,7 +113,7 @@ public class DBApp extends AdminApp {
 				fields.add(item_keys.next().toString());
 			}
 			
-			HashMap<String, Object> context = getAdminContext();
+			ResponseContext context = getAdminContext();
 			context.put("collection", coll);
 			context.put("record", rec);
 			context.put("values", rec.toJSON().toMap());

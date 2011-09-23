@@ -14,19 +14,7 @@ import com.nyaruka.vm.VM;
 
 import junit.framework.TestCase;
 
-public class DBAppTest extends TestCase {
-
-	private HttpResponse getResponse(NativeApp app, HttpRequest request){
-		for (Route route : app.getRoutes()){
-			String[] groups = route.matches(request.url());
-			if (groups != null){
-				HttpResponse response = route.getView().handle(request, groups);
-				assertEquals("200 OK", response.getStatus());
-				return response;
-			}
-		}
-		return null;
-	}
+public class DBAppTest extends NativeAppTestCase {
 	
 	public void testIndex(){
 		VM vm = new VM(new DevDB());
@@ -35,6 +23,7 @@ public class DBAppTest extends TestCase {
 		
 		// test our index page
 		TemplateResponse resp = (TemplateResponse) getResponse(app, new HttpRequest("/db/"));
+		assert200(resp);
 		HashMap<String, Object> context = resp.getContext();
 		
 		ArrayList<Collection> colls = (ArrayList<Collection>) context.get("collections");
@@ -47,6 +36,7 @@ public class DBAppTest extends TestCase {
 		RequestParameters params = new RequestParameters();
 		params.put("name", "contacts");
 		resp = (TemplateResponse) getResponse(app, new HttpRequest("/db/", "POST", new Properties(), params));
+		assert200(resp);
 		context = resp.getContext();		
 		
 		// should now be two collections

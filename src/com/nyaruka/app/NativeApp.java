@@ -2,13 +2,9 @@ package com.nyaruka.app;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
-import com.nyaruka.vm.BoaServer;
 
 /**
  * Abstract base class for all Boa apps that are written natively in Java.
@@ -37,5 +33,39 @@ public abstract class NativeApp {
 	 */
 	public String buildActionRegex(String action){
 		return "^/" + m_name + "/" + action + "/(.*)$";
+	}
+
+	/**
+	 * Middleware-like hook for Native Apps.  Every request will have preProcess run on
+	 * it for each NativeApp.  A Native app can either manipulate the request that is 
+	 * passed in, or shortcut the request entirely by returning an HttpResponse.
+	 * 
+	 * @param request
+	 * @return
+	 */
+	public HttpResponse preProcess(HttpRequest request){
+		return null;
+	}
+	
+	/**
+	 * Middleware-like hook for Native Apps.  Every response will have postProcess
+	 * run on it for each NativeApp.  A NativeApp can manipulate the request and/or
+	 * response, or return a new response entirely.
+	 * 
+	 * @param request
+	 * @param response
+	 */
+	public HttpResponse postProcess(HttpRequest request, HttpResponse response){
+		return null;
+	}
+	
+	/** 
+	 * Middleware-like hook for Native Apps which allows them to manipulate a response
+	 * if an exception is thrown. 
+	 * 
+	 * @param error The error that occurred
+	 */
+	public HttpResponse handleError(Throwable error){
+		return null;
 	}
 }

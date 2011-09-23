@@ -14,13 +14,13 @@ import com.nyaruka.http.HttpResponse;
 public class TemplateResponse extends HttpResponse {
 
 	private String m_template;
-	private HashMap<String, Object> m_context;
+	private ResponseContext m_context;
 	
-	public TemplateResponse(String template, HashMap<String, Object> context){
+	public TemplateResponse(String template, ResponseContext context){
 		m_template = template;
 		m_context = context;
 	}
 	
 	public String getTemplate(){ return m_template; }
-	public HashMap<String, Object> getContext(){ return m_context; }
+	public HashMap<String, Object> getContext(){ return m_context.toMap(); }
 }

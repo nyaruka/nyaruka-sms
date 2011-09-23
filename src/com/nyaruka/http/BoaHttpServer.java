@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import com.nyaruka.app.TemplateResponse;
 import com.nyaruka.util.FileUtil;
 import com.nyaruka.vm.BoaServer;
 import com.nyaruka.vm.Session;
@@ -85,6 +86,12 @@ public class BoaHttpServer extends NanoHTTPD {
 						url = url.substring(1);
 					}
 					response = m_boa.handleAppRequest(request);
+				}
+				
+				// render our template
+				if (response instanceof TemplateResponse){
+					TemplateResponse tp = (TemplateResponse) response;
+					tp.setBody(m_boa.renderTemplate(tp.getTemplate(), tp.getContext()));
 				}
 			}
 			

@@ -35,7 +35,9 @@ public class SessionManager {
 			if (found.count() == 1){
 				Record record = found.next();
 				JSON data = record.getData();
-				session = new Session(record.getId(), data.getString("key"), data.getJSON("data")); 
+				String user = null;
+				if (data.has("user")) user = data.getString("user");
+				session = new Session(record.getId(), data.getString("key"), user, data.getJSON("data")); 
 			}
 		}
 

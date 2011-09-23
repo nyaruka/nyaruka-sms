@@ -1,7 +1,6 @@
 package com.nyaruka.app;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -22,7 +21,7 @@ public class DBApp extends AdminApp {
 		super("db", vm);
 	}
 	
-	class IndexView extends View {
+	class IndexView extends AuthView {
 		public HttpResponse handle(HttpRequest r, String[] groups) {
 			if (r.method().equalsIgnoreCase("POST")){
 				m_vm.getDB().ensureCollection(r.params().getProperty("name"));
@@ -32,9 +31,9 @@ public class DBApp extends AdminApp {
 		}
 	}
 	
-	class CollectionView extends View {
+	class CollectionView extends AuthView {
 		public HttpResponse handle(HttpRequest r, String[] groups) {
-			String collName = groups[0];
+			String collName = groups[1];
 			Collection coll = m_vm.getDB().getCollection(collName);
 			
 			// they are adding a new record
@@ -72,7 +71,7 @@ public class DBApp extends AdminApp {
 				records.add(record.toJSON().toMap());
 			}
 			
-			HashMap<String, Object> context = getAdminContext();
+			ResponseContext context = getAdminContext();
 			context.put("keys", keys);
 			context.put("collection", coll);
 			context.put("records", records);
@@ -80,21 +79,23 @@ public class DBApp extends AdminApp {
 		}
 	}
 	
-	class DeleteCollectionView extends View {
-		public HttpResponse handle(HttpRequest request, String[] groups){
-			String collName = groups[0];
-			Collection coll = m_vm.getDB().getCollection(collName);
-			m_vm.getDB().deleteCollection(coll);
+	class DeleteCollectionView extends AuthView {
+		public HttpResponse handle(HttpRequest r, String[] groups){
+			if (r.method().equals(r.POST)){
+				String collName = groups[1];
+				Collection coll = m_vm.getDB().getCollection(collName);
+				m_vm.getDB().deleteCollection(coll);
+			}
 			return new RedirectResponse("/db/");
 		}
 	}
 	
-	class RecordView extends View {
+	class RecordView extends AuthView {
 		public HttpResponse handle(HttpRequest r, String[] groups) {
-			String collName = groups[0];
+			String collName = groups[1];
 			Collection coll = m_vm.getDB().getCollection(collName);
 			
-			long id = Long.parseLong(groups[1]);
+			long id = Long.parseLong(groups[2]);
 			Record rec = coll.getRecord(id);
 
 			// they are posting new data
@@ -113,7 +114,7 @@ public class DBApp extends AdminApp {
 				fields.add(item_keys.next().toString());
 			}
 			
-			HashMap<String, Object> context = getAdminContext();
+			ResponseContext context = getAdminContext();
 			context.put("collection", coll);
 			context.put("record", rec);
 			context.put("values", rec.toJSON().toMap());
@@ -123,13 +124,13 @@ public class DBApp extends AdminApp {
 		}
 	}
 	
-	class DeleteRecordView extends View {
+	class DeleteRecordView extends AuthView {
 		public HttpResponse handle(HttpRequest r, String[] groups) {
-			String collName = groups[0];
+			String collName = groups[1];
 			Collection coll = m_vm.getDB().getCollection(collName);
 			
-			if (r.method() == "POST"){
-				long id = Long.parseLong(groups[1]);
+			if (r.method().equals(r.POST)){
+				long id = Long.parseLong(groups[2]);
 				coll.delete(id);
 			}
 			return new RedirectResponse("/db/" + coll.getName() + "/");

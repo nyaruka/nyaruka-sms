@@ -23,13 +23,17 @@ public class Session {
 	/** whether this session data needs to be saved */
 	private boolean m_needsSaving = false;
 	
+	/** the username of the logged in user for this session, if there is one */
+	private String m_user;
+	
 	/** the data of our session */
 	private JSON m_data;
 	
-	public Session(long id, String key, JSON data){
+	public Session(long id, String key, String user, JSON data){
 		m_id = id;
 		m_key = key;
 		m_data = data;
+		m_user = user;
 	}
 	
 	public Session(String key){
@@ -46,6 +50,14 @@ public class Session {
 	public boolean isNew(){ return m_isNew; }
 	public JSON getData(){ return m_data; }
 
+	/** The logged in user */
+	public void setUser(String user){
+		m_user = user;
+		requestSave();
+	}
+	
+	public String getUser(){ return m_user; }
+	
 	/** convenience wrapper to our JSON data store */
 	public void set(String key, String value){
 		m_data.put(key, value);
@@ -75,6 +87,10 @@ public class Session {
 	
 	public String getKey(){ return m_key; }
 	
+	public String toString(){
+		return asJSON().toString();
+	}
+	
 	/** JSON blob ready to be stored in the db */
 	public JSON asJSON(){
 		JSON json = new JSON();
@@ -83,6 +99,10 @@ public class Session {
 		
 		if (m_id > 0){
 			json.put("id", m_id);
+		}
+		
+		if (m_user != null){
+			json.put("user", m_user);
 		}
 		
 		return json; 

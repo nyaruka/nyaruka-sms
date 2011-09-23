@@ -1,6 +1,5 @@
 package com.nyaruka.app;
 
-import java.util.HashMap;
 import com.nyaruka.vm.VM;
 
 public abstract class AdminApp extends NativeApp {
@@ -15,8 +14,8 @@ public abstract class AdminApp extends NativeApp {
 	/**
 	 * The base context for the admin view
 	 */
-	HashMap<String,Object> getAdminContext() {
-		HashMap<String, Object> context = new HashMap<String, Object>();
+	ResponseContext getAdminContext() {
+		ResponseContext context = new ResponseContext();
 		context.put("collections", m_vm.getDB().getCollections());
 		context.put("apps", m_vm.getApps());
 		return context;

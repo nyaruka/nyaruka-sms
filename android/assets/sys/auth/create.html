@@ -1,0 +1,37 @@
+{! extends "../base.html" !}
+
+{! block content !}
+<div class="page-header">
+  <h1>Create User</h1>
+</div>
+
+<div class="row">
+  <div class="span5 columns">
+    <h2>Users</h2>
+    <p>Users let you control access to your applications.</p>
+    <p>You should restrict users to only have the permissions they need.</p>
+  </div>
+
+  <div class="span6 columns">
+    <form class="form-stacked" method="post">
+      <fieldset>
+        <legend>New User</legend>
+        <div class="clearfix">
+          <label for="name">Username</label>
+          <div class="input">
+            <input class="xlarge" id="username" name="username" size="30" type="text" value="{{username}}" />
+          </div>
+        </div><!-- /clearfix -->
+        <div class="clearfix">
+          <label for="name">Password</label>
+          <div class="input">
+            <input class="xlarge" id="password" name="password" size="30" type="password" value="" />
+          </div>
+        </div><!-- /clearfix -->
+      </fieldset>
+      <input type="submit" value="Create" class="btn primary" />
+    </form>
+  </div>
+</div>
+{! endblock !}
+

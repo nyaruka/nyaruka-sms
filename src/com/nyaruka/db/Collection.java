@@ -36,6 +36,12 @@ public class Collection {
 		return m_db.findRecords(this, query);
 	}
 	
+	public Cursor find(String field, String value){
+		JSON json = new JSON();
+		json.put(field, value);
+		return find(json);
+	}
+	
 	public Cursor find(String query) {
 		try{
 			JSON json = new JSON(query);
@@ -166,6 +172,7 @@ public class Collection {
 	}
 	
 	public String getName(){ return m_name; }
+	public String toString(){ return "Collection[" + m_name + "]"; }
 		
 	private DB m_db;
 	private int m_id;

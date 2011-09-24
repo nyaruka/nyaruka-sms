@@ -3,7 +3,9 @@ package com.nyaruka.vm;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,12 +67,12 @@ public class DevBoaServer extends BoaServer {
 			throw new RuntimeException("App with name '" + namespace + "' already exists.");
 		}
 		
-		File appTemplateDir = new File(getPath("sys/app/template"));
+		File appTemplateDir = new File(getPath("sys/app/new_app"));
 		
 		// render our main.js as a template
 		HashMap<String,Object> context = new HashMap<String,Object>();
 		context.put("name", namespace);
-		String mainJS = renderTemplate(getPath("sys/app/template/main.js"), context);
+		String mainJS = renderTemplate(getPath("sys/app/new_app/main.js"), context);
 		
 		// create our app dir and write our rendered main js
 		File appDir = new File(getPath("apps/" + namespace));
@@ -98,6 +100,11 @@ public class DevBoaServer extends BoaServer {
 	}
 	
 	public static void main(String[] args) {
+		
+		if (args.length == 0) {
+			System.out.println("Usage: java com.nyaruka.vm.DevBoaServer 8080 [assets]");
+			return;
+		}
 		int port = Integer.parseInt(args[0]);
 		
 		String path = null;
@@ -127,7 +134,44 @@ public class DevBoaServer extends BoaServer {
 		}
 	}
 	
+	@Override
+	public String[] getFiles(BoaApp app) {
+		File dir = new File(getPath("apps"), app.getNamespace());
+		System.out.println(dir.getAbsolutePath());
+		return dir.list();
+	}
+	
+	
+	@Override
+	public OutputStream getOutputStream(String path) {
+		try {
+			return new FileOutputStream(new File(getPath(path)));
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public void createFile(BoaApp app, String fileName, boolean isCode) {
+		
+		File dir = new File(getPath("apps"), app.getNamespace());
+		File toCreate = new File(dir, fileName);
+		
+		if (toCreate.exists()) {
+			throw new RuntimeException("File with name '" + fileName + "' already exists.");
+		}
+		
+		if (isCode) {
+			File code = new File(getPath("sys/app/new_file"), "code.js");
+			FileUtil.copyFile(code, toCreate);
+		} else {
+			File html = new File(getPath("sys/app/new_file"), "template.html");
+			FileUtil.copyFile(html, toCreate);			
+		}
+	}
+
 	
 	private String m_rootDir;
+
 
 }

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import com.nyaruka.app.TemplateResponse;
 import com.nyaruka.util.FileUtil;
 import com.nyaruka.vm.BoaServer;
 import com.nyaruka.vm.Session;
@@ -22,7 +23,7 @@ public class BoaHttpServer extends NanoHTTPD {
 		m_boa = boa;
 	}
 	
-	public synchronized Response serve(String url, String method, Properties headers, Properties params, Properties files){
+	public synchronized Response serve(String url, String method, Properties headers, RequestParameters params, Properties files){
 		m_boa.log(method + " " + url);
 		HttpRequest httpRequest = new HttpRequest(url, method, headers, params);
 		
@@ -45,7 +46,7 @@ public class BoaHttpServer extends NanoHTTPD {
 	public synchronized HttpResponse serve(HttpRequest request){
 		String url = request.url();
 		m_boa.log(request.method() + " " + url);
-		Properties params = request.params();
+		RequestParameters params = request.params();
 		String method = request.method();
 		
 		// static files don't need server stuff
@@ -58,14 +59,11 @@ public class BoaHttpServer extends NanoHTTPD {
 			Session session = m_boa.initSession(request);
 			HttpResponse response = null;
 
-			if (url.startsWith("/db")){
-				response = m_boa.renderDB(request);
-			}
-			else if (url.equals("/edit")) {
+			if (url.equals("/edit")) {
 				if (!params.containsKey("filename")) {
 					throw new IllegalArgumentException("The editor respectfully requests a file to edit.");
 				} else {
-					File file = new File("android/assets/apps/" + (String)params.get("filename"));
+					File file = new File("android/assets/apps/" + (String)params.getProperty("filename"));
 					if (method.equals("POST")) {												
 						String contents = (String)params.getProperty("editor");
 						FileUtil.writeFile(file, contents);
@@ -78,21 +76,30 @@ public class BoaHttpServer extends NanoHTTPD {
 			else if (url.equals("/log")) {
 				response = m_boa.renderLog(request);
 			}
-			else if (url.startsWith("/admin")) {
-				response = m_boa.renderAdmin(request);
-			}
-			
 			else {
-				if (url.startsWith("/")) {
-					url = url.substring(1);
+				// first try native apps
+				response = m_boa.handleNativeRequest(request);
+				
+				// then JS apps
+				if (response == null){
+					if (url.startsWith("/")) {
+						url = url.substring(1);
+					}
+					response = m_boa.handleAppRequest(request);
 				}
-				response = m_boa.handleAppRequest(request);
+				
+				// render our template
+				if (response instanceof TemplateResponse){
+					TemplateResponse tp = (TemplateResponse) response;
+					tp.setBody(m_boa.renderTemplate(tp.getTemplate(), tp.getContext()));
+				}
 			}
 			
 			// if our session is new, set our session cookie in our response
 			if (session.isNew()){
 				response.setCookie(SessionManager.SESSION_KEY, session.getKey());
 			}
+			
 			// save the session if necessary
 			m_boa.saveSession(session);
 			

@@ -1,17 +1,18 @@
-package com.nyaruka.app;
+package com.nyaruka.app.auth;
 
-import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
+import com.nyaruka.app.AdminApp;
+import com.nyaruka.app.RedirectResponse;
+import com.nyaruka.app.ResponseContext;
+import com.nyaruka.app.TemplateResponse;
+import com.nyaruka.app.View;
 import com.nyaruka.db.Collection;
 import com.nyaruka.db.Cursor;
 import com.nyaruka.db.Record;
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
-import com.nyaruka.json.JSON;
-import com.nyaruka.util.Base64;
 import com.nyaruka.vm.VM;
 
 /**
@@ -20,107 +21,26 @@ import com.nyaruka.vm.VM;
  * @author nicp
  */
 public class AuthApp extends AdminApp {
-
-	public static class User {
-		public User(Record r){
-			JSON record = r.getData();
-			m_username = record.getString("username");
-			m_password = record.getString("password");
-			m_salt = record.getString("salt");
-			if (record.has("name")){
-				m_name = record.getString("name");
-			}
-			if (record.has("email")){
-				m_email = record.getString("email");
-			}
-			
-			if (record.has("data")){
-				m_data = r.getData().getJSON("data");
-			} else {
-				m_data = new JSON();
-			}
-			m_id = r.getId();
-		}
-		
-		public User(String username, String password){
-			m_username = username;
-			m_salt = generateSalt();
-			m_password = hashPassword(password, m_salt);
-			m_data = new JSON();
-		}
-		
-		public boolean checkPassword(String password){
-			String hashed = hashPassword(password, m_salt);
-			return hashed.equals(m_password);
-		}
-		
-		public boolean hasPermission(String permission){
-			return false;
-		}
-		
-		public String getUsername(){ return m_username; }
-		public JSON getData(){ return m_data; }
-
-		public JSON toJSON(){
-			JSON json = new JSON();
-			json.put("username", m_username);
-			json.put("password", m_password);
-			json.put("email", m_email);
-			json.put("name", m_name);
-			json.put("salt", m_salt);
-			json.put("data", m_data);
-			
-			if (m_id > 0){
-				json.put("id", m_id);
-			}
-			
-			return json;
-		}
-		
-		public String getEmail(){ return m_email; }
-		public String getName(){ return m_name; }
-		public void setEmail(String email){ m_email = email; }
-		public void setName(String name){ m_name = name; }
-		
-		private long m_id;
-		private JSON m_data;
-		private String m_username;
-		private String m_password;
-		private String m_salt;
-		private String m_name;
-		private String m_email;
-	}
-	
-	public static class AuthException extends RuntimeException {
-		public AuthException(String returnURL){
-			this(returnURL, "You must be logged in to access this page.");
-		}
-		
-		public AuthException(String returnURL, String error){
-			m_returnURL = returnURL;
-			m_error = error;
-		}
-		
-		public String getReturnURL(){ return m_returnURL; }
-		private String m_returnURL;
-		
-		public String getError(){ return m_error; }
-		private String m_error;
-	}
 	
 	public AuthApp(VM vm){
 		super("auth", vm);
 		m_vm = vm;
 	}
 	
-	private Collection getCollection(){
+	private Collection getUserCollection(){
 		Collection coll = m_vm.getDB().ensureCollection("users");
 		coll.ensureStrIndex("username");
 		return coll;
 	}
 	
+	private Collection getPermCollection(){
+		Collection coll = m_vm.getDB().ensureCollection("permissions");
+		coll.ensureStrIndex("slug");
+		return coll;
+	}
+	
 	public User lookupUser(String username){
-		Collection coll = getCollection();
+		Collection coll = getUserCollection();
 		Cursor c = coll.find("username", username);
 		if (c.hasNext()){
 			return new User(c.next());
@@ -142,7 +62,7 @@ public class AuthApp extends AdminApp {
 	 * @return
 	 */
 	public User createUser(String username, String password){
-		Collection coll = getCollection();
+		Collection coll = getUserCollection();
 		Cursor c = coll.find("username", username);
 		
 		// doesn't exist, create it
@@ -155,6 +75,84 @@ public class AuthApp extends AdminApp {
 		}
 	}
 	
+	public Permission lookupPermission(String slug){
+		Cursor c = getPermCollection().find("slug", slug);
+		if (c.hasNext()){
+			return new Permission(c.next());
+		} else {
+			return null;
+		}
+	}
+	
+	public Permission createPermission(String slug){
+		Permission perm = new Permission(slug);
+		getPermCollection().save(perm.toJSON());
+		return lookupPermission(slug);
+	}
+	
+	class PermissionView extends AuthView {
+		@Override
+		public HttpResponse handle(HttpRequest request, String[] groups){
+			ResponseContext context = getAdminContext();
+
+			List<Permission> perms = new ArrayList<Permission>();
+			Cursor cursor = getPermCollection().find("{}");
+			while(cursor.hasNext()){
+				perms.add(new Permission(cursor.next()));
+			}
+			
+			context.put("permissions", perms);
+			return new TemplateResponse("auth/perm_list.html", context);
+		}
+	}
+	
+	public class EditPermissionView extends AuthView {
+		@Override
+		public HttpResponse handle(HttpRequest request, String[] groups){
+			ResponseContext context = getAdminContext();
+			Permission perm = lookupPermission(groups[1]);
+			if (perm == null){
+				context.put("error", "No permission found with the slug '" + groups[1] + "'");
+			} else {
+				if (request.method().equals(request.POST)){
+					perm.setName(request.params().getProperty("name"));
+					perm.setDescription(request.params().getProperty("description"));
+					getPermCollection().save(perm.toJSON());
+					
+					return new RedirectResponse("/auth/perm/");
+				}
+			}
+			context.put("permission", perm);
+			return new TemplateResponse("auth/perm_edit.html", context);
+		}
+	}
+	
+	public class CreatePermissionView extends AuthView {
+		@Override
+		public HttpResponse handle(HttpRequest request, String[] groups){
+			ResponseContext context = getAdminContext();
+			
+			if (request.method().equals(request.POST)){
+				String slug = request.params().getProperty("slug");
+				context.put("slug", slug);
+				
+				if (slug == null){
+					context.put("error", "You must include a slug for your permission");
+				} else{
+					Permission perm = lookupPermission(slug);
+					if (perm != null){
+						context.put("error", "A permission with that slug already exists");
+					} else {
+						perm = createPermission(slug);
+						return new RedirectResponse("/auth/perm/edit/" + slug + "/");
+					}
+				}
+			}
+			
+			return new TemplateResponse("auth/perm_create.html", context);			
+		}
+	}
+	
 	class IndexView extends AuthView {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups) {
@@ -164,7 +162,7 @@ public class AuthApp extends AdminApp {
 			if (user != null){
 				context.put("user", user);
 				List<User> users = new ArrayList<User>();
-				Cursor cursor = getCollection().find("{}");
+				Cursor cursor = getUserCollection().find("{}");
 				while(cursor.hasNext()){
 					users.add(new User(cursor.next()));
 				}
@@ -175,7 +173,7 @@ public class AuthApp extends AdminApp {
 		}
 	}
 	
-	class CreateView extends AuthView {
+	class CreateUserView extends AuthView {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups) {
 			ResponseContext context = getAdminContext();
@@ -206,7 +204,7 @@ public class AuthApp extends AdminApp {
 		}
 	}
 	
-	class EditView extends AuthView {
+	class EditUserView extends AuthView {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups) {
 			ResponseContext context = getAdminContext();
@@ -217,7 +215,7 @@ public class AuthApp extends AdminApp {
 				if (request.method().equals(request.POST)){
 					user.setName(request.params().getProperty("name"));
 					user.setEmail(request.params().getProperty("email"));
-					getCollection().save(user.toJSON());
+					getUserCollection().save(user.toJSON());
 					
 					return new RedirectResponse("/auth/");
 				}
@@ -306,30 +304,13 @@ public class AuthApp extends AdminApp {
 	public void buildRoutes() {
 		addRoute(buildActionRegex("login"), new LoginView());
 		addRoute(buildActionRegex("logout"), new LogoutView());		
-		addRoute(buildActionRegex("create"), new CreateView());				
-		addRoute("^/auth/edit/(.*?)/$", new EditView());				
+		addRoute(buildActionRegex("create"), new CreateUserView());
+		addRoute("^/auth/edit/(.*?)/$", new EditUserView());				
 		addRoute("^/auth/$", new IndexView());		
-	}
-	
-	static String hashPassword(String password, String salt){
-		try{
-			MessageDigest digest = MessageDigest.getInstance("SHA-1");
-			digest.update(password.getBytes());
-			digest.update(salt.getBytes());
-			byte[] hash = digest.digest();
-			return Base64.encodeBytes(hash);
-		} catch (Throwable t){
-			t.printStackTrace();
-			return null;
-		}
-	}
-	
-	static String generateSalt(){
-		long seed = System.currentTimeMillis();
-		Random r = new Random(seed);
-		byte[] salt = new byte[32];
-		r.nextBytes(salt);
-		return Base64.encodeBytes(salt);
+		
+		addRoute("^/auth/perm/$", new PermissionView());
+		addRoute("^/auth/perm/create/$", new CreatePermissionView());
+		addRoute("^/auth/perm/edit/(.*?)/$", new EditPermissionView());
 	}
 
 	private VM m_vm;

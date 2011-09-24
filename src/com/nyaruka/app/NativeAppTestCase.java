@@ -74,7 +74,7 @@ public abstract class NativeAppTestCase extends TestCase {
 		assertTrue(red.getDestination().contains(url));
 	}
 	
-	DB m_db;
-	VM m_vm;
-	Properties m_cookies = new Properties();
+	protected DB m_db;
+	protected VM m_vm;
+	protected Properties m_cookies = new Properties();
 }

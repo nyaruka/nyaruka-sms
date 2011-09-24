@@ -1,6 +1,6 @@
-package com.nyaruka.app;
+package com.nyaruka.app.auth;
 
-import com.nyaruka.app.AuthApp.User;
+import com.nyaruka.app.NativeAppTestCase;
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
 
@@ -33,8 +33,8 @@ public class AuthAppTest extends NativeAppTestCase {
 		// this time we should be redirected to '/' as we had a successful login
 		assertRedirect(resp, "/");
 		
-		// hit our user page
-		req = new HttpRequest("/auth/");
+		// hit our user page again
+		req = new HttpRequest("/auth/login/");
 		resp = getResponse(app, req);
 		assert200(resp);
 		
@@ -48,7 +48,7 @@ public class AuthAppTest extends NativeAppTestCase {
 		assertRedirect(resp, "/");
 		
 		// hitting our user page, we shouldn't have a user
-		req = new HttpRequest("/auth/");
+		req = new HttpRequest("/auth/login/");
 		resp = getResponse(app, req);
 		assert200(resp);	
 		

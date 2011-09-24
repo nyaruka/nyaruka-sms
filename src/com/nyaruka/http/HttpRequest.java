@@ -2,7 +2,8 @@ package com.nyaruka.http;
 
 import java.util.Properties;
 
-import com.nyaruka.app.AuthApp.User;
+
+import com.nyaruka.app.auth.User;
 import com.nyaruka.vm.Session;
 
 /**

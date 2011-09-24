@@ -76,7 +76,7 @@
 
 
   <div style="float:right;padding-right:2px;">
-   	<a href="#" class="btn small" id="browser_button">Test Browser</a>
+   	
    	<a href="#" class="btn primary small" id="save_button">Save</a>
   </div>
    
@@ -89,7 +89,7 @@
         {% for file in files %}
         	{% if file.active %}
         		<li id="{{file.id}}_tab">
-        		<a class="activate" href="#" name="{{file.id}}">{{file}}</a>
+        		<a class="activate" href="#" name="{{file.id}}">{{file}}dd</a>
         		</li>
         	{% endif %}
         {% endfor %}
@@ -98,13 +98,23 @@
         
 	  <ul class="secondary-nav" style="margin-right:50px">
   		<li class="dropdown"> 
-    	<a href="#" class="dropdown-toggle">Files</a> 
+    	<a href="#" class="dropdown-toggle">File</a> 
+    	
     	<ul class="dropdown-menu">
+    	
+    		<li><a href="#" id="close_file">Close</a></li>
+    		
         	{% for file in files %}
 	        	{% if file.active|not %}
 		  		<li><a class="open-file" href="#">{{file}}</a></li>    	
 	  			{% endif %}
   			{% endfor %}
+  			
+  			{% if files %}
+  			<li class="divider"/>
+  			{% endif %}
+  			
+  			<li><a href="#" id="browser_button">Test Browser</a></li>
     	</ul>
   	    </li> 
 	  </ul>
@@ -126,7 +136,7 @@
 <form method="POST" id="open_form">
 	{% for file in files %}
 		{% if file.active %}
-			<input name="file" type="hidden" value="{{file.path}}"/>
+			<input id="open_{{file.id}}" name="file" type="hidden" value="{{file.path}}"/>
 		{% endif %}
 	{% endfor %}
 </form>
@@ -257,6 +267,8 @@ function loadFile(id) {
 	    editor.getSession().setMode(new JavaScriptMode());
     }
    
+    $("#close_file").text("Close " + currentTab.name);
+    
 	open_file = id;
     changed = false;
 
@@ -393,15 +405,30 @@ $(document).ready(function() {
 		saveFile();
     });
     
-    $("#browser_button").click(function() {
-    	test_browser = window.open("/{{ app.namespace }}/","eric")
+    $("#browser_button").click(function(e) {
+    	e.preventDefault();
+    	test_browser = window.open("/{{ app.namespace }}/","test_browser")
+    	window.focus();
+    	editor.focus();
     });
     
-    $(".open-file").click(function() {
-    	
+    $(".open-file").click(function() {    	
     	var toOpen = $(this).text();    	
-    	$('<input>').attr({ type: 'hidden', name: 'file', value: toOpen }).appendTo('form');    	
+    	$('<input>').attr({ type: 'hidden', name: 'file', value: toOpen }).appendTo('#open_form');    	
     	$("#open_form").submit();
+    });
+    
+    
+    $("#close_file").click(function(e) {
+    	if (tabs.length > 1) {
+    		e.preventDefault();
+    		var tab = getActiveTab();
+			$("#open_" + tab.id).remove();
+			$("#open_form").submit();
+		} else {
+			window.close();
+		}
+		
     });
     
     $(".activate").click(function(e) {    

@@ -17,9 +17,9 @@ function Request(){
 		}
 	};
 	
-	var iterator = _request.params().keys();
-	while(iterator.hasMoreElements()){
-		var key = '' + iterator.nextElement().toString();
+	var iterator = _request.params().keys().iterator();
+	while(iterator.hasNext()){
+		var key = '' + iterator.next().toString();
 		this.params[key] = '' + _request.params().getProperty(key).toString();
 	}
 	

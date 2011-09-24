@@ -1,9 +1,50 @@
 {! extends "../base.html" !}
 
 {! block content !}
+<div class="page-header">
+  <h1>Users</h1>
+</div>
+
 {% if user %}
-You are logged in as {{ user.username }}
+<div class="row">
+  <div class="span10 columns">
+    <table class="zebra-striped">
+      <thead>
+        <tr>
+          <th>username</th>
+          <th>name</th>
+          <th>email</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr class="collection_row" name="{{ user.username }}">
+          <td>{{ user.username }}</td>
+          <td>{{ user.name }}</td>
+          <td>{{ user.email }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="span5 columns">
+    <h2>Users</h2>
+    <p>Users let you control access to your applications.</p>
+    <p>You should restrict users to only have the permissions they need.</p>
+    <a class="btn primary" href="/auth/create/">Add User</a>
+  </div>
+</div>
 {% else %}
 You are not logged in.
 {% endif %}
+{! endblock !}
+
+{! block extrascript !}
+<script>
+  $(document).ready(function(){
+    $(".collection_row").click(function(){
+      document.location.href = "/auth/edit/" + $(this).attr("name") + "/";
+    });
+  });
+</script>
 {! endblock !}

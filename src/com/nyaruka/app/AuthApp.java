@@ -1,6 +1,8 @@
 package com.nyaruka.app;
 
 import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import com.nyaruka.db.Collection;
@@ -17,34 +19,76 @@ import com.nyaruka.vm.VM;
  * 
  * @author nicp
  */
-public class AuthApp extends NativeApp {
+public class AuthApp extends AdminApp {
 
 	public static class User {
 		public User(Record r){
-			m_data = r.getData();
+			JSON record = r.getData();
+			m_username = record.getString("username");
+			m_password = record.getString("password");
+			m_salt = record.getString("salt");
+			if (record.has("name")){
+				m_name = record.getString("name");
+			}
+			if (record.has("email")){
+				m_email = record.getString("email");
+			}
+			
+			if (record.has("data")){
+				m_data = r.getData().getJSON("data");
+			} else {
+				m_data = new JSON();
+			}
+			m_id = r.getId();
 		}
 		
 		public User(String username, String password){
+			m_username = username;
+			m_salt = generateSalt();
+			m_password = hashPassword(password, m_salt);
 			m_data = new JSON();
-			m_data.put("username", username);
-			String salt = generateSalt();
-			m_data.put("salt", salt);
-			m_data.put("password", hashPassword(password, salt));
 		}
 		
 		public boolean checkPassword(String password){
-			String hashed = hashPassword(password, m_data.getString("salt"));
-			return hashed.equals(m_data.getString("password"));
+			String hashed = hashPassword(password, m_salt);
+			return hashed.equals(m_password);
 		}
 		
 		public boolean hasPermission(String permission){
 			return false;
 		}
 		
-		public String getUsername(){ return m_data.getString("username"); }
+		public String getUsername(){ return m_username; }
 		public JSON getData(){ return m_data; }
+
+		public JSON toJSON(){
+			JSON json = new JSON();
+			json.put("username", m_username);
+			json.put("password", m_password);
+			json.put("email", m_email);
+			json.put("name", m_name);
+			json.put("salt", m_salt);
+			json.put("data", m_data);
+			
+			if (m_id > 0){
+				json.put("id", m_id);
+			}
+			
+			return json;
+		}
 		
+		public String getEmail(){ return m_email; }
+		public String getName(){ return m_name; }
+		public void setEmail(String email){ m_email = email; }
+		public void setName(String name){ m_name = name; }
+		
+		private long m_id;
 		private JSON m_data;
+		private String m_username;
+		private String m_password;
+		private String m_salt;
+		private String m_name;
+		private String m_email;
 	}
 	
 	public static class AuthException extends RuntimeException {
@@ -65,7 +109,7 @@ public class AuthApp extends NativeApp {
 	}
 	
 	public AuthApp(VM vm){
-		super("auth");
+		super("auth", vm);
 		m_vm = vm;
 	}
 	
@@ -104,19 +148,82 @@ public class AuthApp extends NativeApp {
 		// doesn't exist, create it
 		if (!c.hasNext()){
 			User u = new User(username, password);
-			Record r = coll.save(u.getData());
+			Record r = coll.save(u.toJSON());
 			return new User(r);
 		} else {
 			return new User(c.next());
 		}
 	}
 	
-	class IndexView extends View {
+	class IndexView extends AuthView {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups) {
-			ResponseContext context = new ResponseContext();
-			context.put("user", request.user());
+			ResponseContext context = getAdminContext();
+			User user = request.user();
+			
+			if (user != null){
+				context.put("user", user);
+				List<User> users = new ArrayList<User>();
+				Cursor cursor = getCollection().find("{}");
+				while(cursor.hasNext()){
+					users.add(new User(cursor.next()));
+				}
+				context.put("users", users);
+			}
+			
 			return new TemplateResponse("auth/index.html", context);
+		}
+	}
+	
+	class CreateView extends AuthView {
+		@Override
+		public HttpResponse handle(HttpRequest request, String[] groups) {
+			ResponseContext context = getAdminContext();
+			
+			if (request.method().equals(request.POST)){
+				String username = request.params().getProperty("username");
+				String password = request.params().getProperty("password");
+
+				context.put("username", username);
+				
+				if (username == null || password == null){
+					context.put("error", "You must include a username and password");
+				}
+				else if (password.length() < 8){
+					context.put("error", "The password must be 8 characters or longer");
+				} else{
+					User user = lookupUser(username);
+					if (user != null){
+						context.put("error", "A user with that username already exists");
+					} else {
+						user = createUser(username, password);
+						return new RedirectResponse("/auth/edit/" + username + "/");
+					}
+				}
+			}
+			
+			return new TemplateResponse("auth/create.html", context);
+		}
+	}
+	
+	class EditView extends AuthView {
+		@Override
+		public HttpResponse handle(HttpRequest request, String[] groups) {
+			ResponseContext context = getAdminContext();
+			User user = lookupUser(groups[1]);
+			if (user == null){
+				context.put("error", "No user found with the username '" + groups[1] + "'");
+			} else {
+				if (request.method().equals(request.POST)){
+					user.setName(request.params().getProperty("name"));
+					user.setEmail(request.params().getProperty("email"));
+					getCollection().save(user.toJSON());
+					
+					return new RedirectResponse("/auth/");
+				}
+			}
+			context.put("user", user);
+			return new TemplateResponse("auth/edit.html", context);
 		}
 	}
 
@@ -170,6 +277,8 @@ public class AuthApp extends NativeApp {
 	 * our session contains a logged in user.
 	 */
 	public HttpResponse preProcess(HttpRequest request){
+		System.out.println(request.session());
+		
 		// see if there is a user in this session
 		String sessionUser = request.session().getUser();
 		if (sessionUser != null){
@@ -197,6 +306,8 @@ public class AuthApp extends NativeApp {
 	public void buildRoutes() {
 		addRoute(buildActionRegex("login"), new LoginView());
 		addRoute(buildActionRegex("logout"), new LogoutView());		
+		addRoute(buildActionRegex("create"), new CreateView());				
+		addRoute("^/auth/edit/(.*?)/$", new EditView());				
 		addRoute("^/auth/$", new IndexView());		
 	}
 	

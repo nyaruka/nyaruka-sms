@@ -3,3 +3,6 @@
 *.class
 .classpath
 .project
+.classpath
+.DS_Store
+boa.db

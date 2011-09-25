@@ -1,3 +1,5 @@
+<!-- Ants in my pants -->
+
 <project default="test">
 
    <target name="compile">

@@ -118,7 +118,6 @@ public class AuthApp extends AdminApp {
 				context.put("error", "No permission found with the slug '" + groups[1] + "'");
 			} else {
 				if (request.method().equals(request.POST)){
-					perm.setName(request.params().getProperty("name"));
 					perm.setDescription(request.params().getProperty("description"));
 					getPermCollection().save(perm.toJSON());
 					
@@ -222,7 +221,6 @@ public class AuthApp extends AdminApp {
 				context.put("error", "No user found with the username '" + groups[1] + "'");
 			} else {
 				if (request.method().equals(request.POST)){
-					user.setName(request.params().getProperty("name"));
 					user.setEmail(request.params().getProperty("email"));
 					
 					ArrayList<String> newPermissions = new ArrayList<String>();

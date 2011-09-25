@@ -10,7 +10,6 @@
     <table class="zebra-striped">
       <thead>
         <tr>
-          <th>name</th>
           <th>slug</th>
           <th>description</th>
         </tr>
@@ -18,7 +17,6 @@
       <tbody>
         {% for perm in permissions %}
         <tr class="collection_row" slug="{{ perm.slug }}">
-          <td>{{ perm.name }}</td>
           <td>{{ perm.slug }}</td>
           <td>{{ perm.description }}</td>
         </tr>

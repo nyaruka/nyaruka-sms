@@ -42,6 +42,19 @@ public class JSON {
 		}
 	}
 	
+	public String[] getStringArray(String key){
+		try {
+			JSONArray array = m_o.getJSONArray(key);
+			String[] strArray = new String[array.length()];
+			for (int i=0; i<strArray.length; i++){
+				strArray[i] = array.getString(i);
+			}
+			return strArray;
+		} catch (Throwable t){
+			throw new JSONException(t);
+		}
+	}
+	
 	public int getInt(String key){
 		try{
 			return m_o.getInt(key);
@@ -133,6 +146,18 @@ public class JSON {
 	public void put(String key, JSON val){
 		try{
 			m_o.put(key, val.getObject());
+		} catch (Throwable t){
+			throw new JSONException(t);
+		}
+	}
+	
+	public void put(String key, String[] vals){
+		try{
+			JSONArray array = new JSONArray();
+			for (String val : vals){
+				array.put(array.length(), val);
+			}
+			m_o.put(key, array);
 		} catch (Throwable t){
 			throw new JSONException(t);
 		}

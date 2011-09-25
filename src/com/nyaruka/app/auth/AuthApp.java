@@ -90,17 +90,20 @@ public class AuthApp extends AdminApp {
 		return lookupPermission(slug);
 	}
 	
+	public List<Permission> getPermissions(){
+		List<Permission> perms = new ArrayList<Permission>();
+		Cursor cursor = getPermCollection().find("{}");
+		while(cursor.hasNext()){
+			perms.add(new Permission(cursor.next()));
+		}
+		return perms;
+	}
+	
 	class PermissionView extends AuthView {
 		@Override
 		public HttpResponse handle(HttpRequest request, String[] groups){
 			ResponseContext context = getAdminContext();
-
-			List<Permission> perms = new ArrayList<Permission>();
-			Cursor cursor = getPermCollection().find("{}");
-			while(cursor.hasNext()){
-				perms.add(new Permission(cursor.next()));
-			}
-			
+			List<Permission> perms = getPermissions();
 			context.put("permissions", perms);
 			return new TemplateResponse("auth/perm_list.html", context);
 		}
@@ -200,7 +203,7 @@ public class AuthApp extends AdminApp {
 				}
 			}
 			
-			return new TemplateResponse("auth/create.html", context);
+			return new TemplateResponse("auth/user_reate.html", context);
 		}
 	}
 	
@@ -209,19 +212,34 @@ public class AuthApp extends AdminApp {
 		public HttpResponse handle(HttpRequest request, String[] groups) {
 			ResponseContext context = getAdminContext();
 			User user = lookupUser(groups[1]);
+			List<Permission> permissions = getPermissions();
+			context.put("permissions", permissions);
+			
+			// populate them
+			user.populatePermissions(permissions);
+			
 			if (user == null){
 				context.put("error", "No user found with the username '" + groups[1] + "'");
 			} else {
 				if (request.method().equals(request.POST)){
 					user.setName(request.params().getProperty("name"));
 					user.setEmail(request.params().getProperty("email"));
+					
+					ArrayList<String> newPermissions = new ArrayList<String>();
+					for (Permission perm : permissions){
+						String prop = request.params().getProperty("perm_" + perm.getSlug());
+						if (prop != null){
+							newPermissions.add(perm.getSlug());
+						}
+					}
+					user.setPermissions(newPermissions.toArray(new String[newPermissions.size()]));
 					getUserCollection().save(user.toJSON());
 					
 					return new RedirectResponse("/auth/");
 				}
 			}
 			context.put("user", user);
-			return new TemplateResponse("auth/edit.html", context);
+			return new TemplateResponse("auth/user_edit.html", context);
 		}
 	}
 
@@ -241,7 +259,6 @@ public class AuthApp extends AdminApp {
 					// set our user in our session
 					request.session().setUser(username);
 					request.setUser(u);
-
 								
 					// do we have a return URL?
 					String returnURL = request.params().getProperty("return");

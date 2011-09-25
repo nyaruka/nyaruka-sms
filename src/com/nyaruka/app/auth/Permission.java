@@ -42,6 +42,13 @@ public class Permission {
 	public String getSlug(){ return m_slug; }
 	public long getId(){ return m_id; }
 	
+	public boolean isGranted(){	return m_granted; }
+	public void setGranted(boolean granted){ m_granted = granted; }
+	//public boolean getGranted(){ return m_granted; }
+	
+	/** transient variable for whether this permission is granted for a user */
+	private boolean m_granted;
+	
 	private long m_id;
 	private String m_name;
 	private String m_slug;

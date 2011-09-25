@@ -1,6 +1,7 @@
 package com.nyaruka.app.auth;
 
 import java.security.MessageDigest;
+import java.util.List;
 import java.util.Random;
 
 import com.nyaruka.db.Record;
@@ -18,6 +19,10 @@ public class User {
 		}
 		if (record.has("email")){
 			m_email = record.getString("email");
+		}
+		
+		if (record.has("permissions")){
+			m_permissions = record.getStringArray("permissions");
 		}
 		
 		if (record.has("data")){
@@ -41,7 +46,20 @@ public class User {
 	}
 	
 	public boolean hasPermission(String permission){
+		for (String perm : m_permissions){
+			if (perm.equals(permission)){
+				return true;
+			}
+		}
 		return false;
+	}
+	
+	public void populatePermissions(List<Permission> permissions){
+		for (Permission perm : permissions){
+			if (hasPermission(perm.getSlug())){
+				perm.setGranted(true);
+			}
+		}
 	}
 	
 	public String getUsername(){ return m_username; }
@@ -55,6 +73,7 @@ public class User {
 		json.put("name", m_name);
 		json.put("salt", m_salt);
 		json.put("data", m_data);
+		json.put("permissions", m_permissions);
 		
 		if (m_id > 0){
 			json.put("id", m_id);
@@ -67,6 +86,22 @@ public class User {
 	public String getName(){ return m_name; }
 	public void setEmail(String email){ m_email = email; }
 	public void setName(String name){ m_name = name; }
+	
+	public String[] getPermissions(){ return m_permissions; }
+	public void addPermission(String permission){
+		for (String existing : m_permissions){
+			if (permission.equals(existing)){
+				return;
+			}
+		}
+		String[] newPermissions = new String[m_permissions.length+1];
+		System.arraycopy(m_permissions, 0, newPermissions, 0, m_permissions.length);
+		newPermissions[newPermissions.length-1] = permission;
+		m_permissions = newPermissions;
+	}
+	public void setPermissions(String[] permissions){
+		m_permissions = permissions;
+	}
 	
 	static String hashPassword(String password, String salt){
 		try{
@@ -96,4 +131,5 @@ public class User {
 	private String m_salt;
 	private String m_name;
 	private String m_email;
+	private String[] m_permissions = {};
 }

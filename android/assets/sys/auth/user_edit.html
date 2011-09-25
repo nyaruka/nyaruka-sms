@@ -6,13 +6,13 @@
 </div>
 
 <div class="row">
-  <div class="span5 columns">
+  <div class="span6 columns">
     <h2>Users</h2>
     <p>Users let you control access to your applications.</p>
     <p>You should restrict users to only have the permissions they need.</p>
   </div>
 
-  <div class="span6 columns">
+  <div class="span10 columns">
     <form class="form-stacked" method="post">
       <fieldset>
         <legend>{{ user.username }}</legend>
@@ -28,10 +28,26 @@
             <input class="xlarge" id="email" name="email" size="30" type="text" value="{{user.email}}" />
           </div>
         </div><!-- /clearfix -->
-      </fieldset>
+        <div class="clearfix">
+          <label id="optionsCheckboxes">Permissions</label>
+          <div class="input">
+            <ul class="inputs-list">
+              {% for permission in permissions %}
+              <li>
+                <label>
+                  <input type="checkbox" name="perm_{{permission.slug}}" value="perm_{{permission.slug}}" {% if permission.granted %}checked{% endif %}/>
+                  <span>{{ permission.description }}</span>
+                </label>
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
       <input type="submit" value="Save" class="btn primary" />
+      </fieldset>
     </form>
   </div>
 </div>
+
 {! endblock !}
 

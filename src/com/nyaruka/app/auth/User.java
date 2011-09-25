@@ -25,6 +25,10 @@ public class User {
 			m_permissions = record.getStringArray("permissions");
 		}
 		
+		if (record.has("active")){
+			m_active = record.getBoolean("active");
+		}
+		
 		if (record.has("data")){
 			m_data = r.getData().getJSON("data");
 		} else {
@@ -70,6 +74,7 @@ public class User {
 		json.put("username", m_username);
 		json.put("password", m_password);
 		json.put("email", m_email);
+		json.put("active", m_active);
 		json.put("name", m_name);
 		json.put("salt", m_salt);
 		json.put("data", m_data);
@@ -86,6 +91,9 @@ public class User {
 	public String getName(){ return m_name; }
 	public void setEmail(String email){ m_email = email; }
 	public void setName(String name){ m_name = name; }
+
+	public boolean isActive(){ return m_active; }
+	public void setActive(boolean active){ m_active = active; }
 	
 	public String[] getPermissions(){ return m_permissions; }
 	public void addPermission(String permission){
@@ -101,6 +109,11 @@ public class User {
 	}
 	public void setPermissions(String[] permissions){
 		m_permissions = permissions;
+	}
+	
+	public void setPassword(String password){
+		m_salt = generateSalt();
+		m_password = hashPassword(password, m_salt);
 	}
 	
 	static String hashPassword(String password, String salt){
@@ -132,4 +145,5 @@ public class User {
 	private String m_name;
 	private String m_email;
 	private String[] m_permissions = {};
+	private boolean m_active = true;	
 }

@@ -231,8 +231,14 @@ public class AuthApp extends AdminApp {
 						}
 					}
 					user.setPermissions(newPermissions.toArray(new String[newPermissions.size()]));
-					getUserCollection().save(user.toJSON());
+					user.setActive(request.params().getProperty("active") != null);
 					
+					String newPassword = request.params().getProperty("new_password");
+					if (newPassword != null && newPassword.length() > 0){
+						user.setPassword(newPassword);
+					}
+					
+					getUserCollection().save(user.toJSON());
 					return new RedirectResponse("/auth/");
 				}
 			}
@@ -254,16 +260,21 @@ public class AuthApp extends AdminApp {
 				// is this username and password valid?
 				User u = lookupUser(username);
 				if (u != null && u.checkPassword(password)){
-					// set our user in our session
-					request.session().setUser(username);
-					request.setUser(u);
+					if (!u.isActive()){
+						context.put("username", username);
+						context.put("error", "That user is not allowed to access this website.");
+					} else {
+						// set our user in our session
+						request.session().setUser(username);
+						request.setUser(u);
 								
-					// do we have a return URL?
-					String returnURL = request.params().getProperty("return");
-					if (returnURL == null) returnURL = "/";
+						// do we have a return URL?
+						String returnURL = request.params().getProperty("return");
+						if (returnURL == null) returnURL = "/";
 					
-					// if so, redirect to our index
-					return new RedirectResponse(returnURL);
+						// if so, redirect to our index
+						return new RedirectResponse(returnURL);
+					}
 				} else {
 					context.put("username", username);
 					context.put("error", "Incorrect username or password");

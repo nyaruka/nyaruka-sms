@@ -7,7 +7,7 @@ import com.nyaruka.http.HttpResponse;
 public class AuthAppTest extends NativeAppTestCase {
 	
 	public void testLogin(){
-		AuthApp app = new AuthApp(m_vm);
+		AuthApp app = new AuthApp(getVM());
 		
 		// assert we can reach the login page as a get
 		HttpResponse resp = getResponse(app, new HttpRequest("/auth/login/"));

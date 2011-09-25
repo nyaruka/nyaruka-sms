@@ -17,30 +17,31 @@ import junit.framework.TestCase;
 public class DBAppTest extends NativeAppTestCase {
 	
 	public void testIndex(){
-		VM vm = new VM(new DevDB());
-		vm.start(new ArrayList<JSEval>());
-		DBApp app = new DBApp(vm);
 		
+		DBApp app = new DBApp(getVM());
+			
 		// test our index page
-		TemplateResponse resp = (TemplateResponse) getResponse(app, new HttpRequest("/db/"));
+		TemplateResponse resp = (TemplateResponse) getResponse(app, getLoggedInRequest("/db/"));
 		assert200(resp);
 		HashMap<String, Object> context = resp.getContext();
 		
 		ArrayList<Collection> colls = (ArrayList<Collection>) context.get("collections");
 
-		// should be one collection, sessions 
-		assertEquals(1, colls.size());
-		assertEquals("sessions", colls.get(0).getName());
+		// should be two collections, users and sessions
+		assertEquals(2, colls.size());
+		assertEquals("users", colls.get(0).getName());
+		assertEquals("sessions", colls.get(1).getName());
 		
 		// create a new collection via a post
 		RequestParameters params = new RequestParameters();
 		params.put("name", "contacts");
-		resp = (TemplateResponse) getResponse(app, new HttpRequest("/db/", "POST", new Properties(), params));
+		
+		resp = (TemplateResponse) getResponse(app, getLoggedInPost("/db/", params));
 		assert200(resp);
 		context = resp.getContext();		
 		
-		// should now be two collections
+		// should now be three collections
 		colls = (ArrayList<Collection>) context.get("collections");		
-		assertEquals(2, colls.size());
+		assertEquals(3, colls.size());
 	}
 }

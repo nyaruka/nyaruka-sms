@@ -21,10 +21,12 @@ public class FileUtil {
 
 	public static void delete(File f) {
 		if (f.isDirectory()) {
-			for (File c : f.listFiles()) {
+			for (File c : f.listFiles()) {				
 				delete(c);
 			}
 		}
+		
+		System.out.println("Deleting: " + f.getAbsoluteFile());
 		if (!f.delete()) {
 			System.err.println("Couldn't delete " + f);
 		}

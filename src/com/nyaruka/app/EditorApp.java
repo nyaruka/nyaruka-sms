@@ -10,13 +10,14 @@ import com.nyaruka.http.RequestParameters;
 import com.nyaruka.util.FileUtil;
 import com.nyaruka.vm.BoaApp;
 import com.nyaruka.vm.BoaServer;
+import com.nyaruka.vm.FileAccessor;
 import com.nyaruka.vm.VM;
 
 public class EditorApp extends AdminApp {
 
-	public EditorApp(BoaServer server, VM vm) {
+	public EditorApp(VM vm, FileAccessor files) {
 		super("editor", vm);
-		m_server = server;
+		m_files = files;
 	}
 
 	public class EditorView extends View {
@@ -34,16 +35,16 @@ public class EditorApp extends AdminApp {
 			if (request.method().equals("POST") && params.containsKey("save_file")) {
 				String saveFile = "apps/" + app.getNamespace() + "/" + params.getProperty("save_file");
 				String contents = request.params().getProperty("contents");				
-				FileUtil.writeStream(m_server.getOutputStream(saveFile), contents);
+				FileUtil.writeStream(m_files.getOutputStream(saveFile), contents);
 			}
 			
 			// get the list of all the files for our app for our dropdown
 			List<String> openFiles = request.params().get("file");
 
-			String[] allFiles = m_server.getFiles(app);
+			String[] allFiles = m_files.getFiles("apps/" + app.getNamespace());
 			List<AppFile> appFiles = new ArrayList<AppFile>();
 			for (String filePath : allFiles) {
-				AppFile appFile = new AppFile(m_server, app, filePath);
+				AppFile appFile = new AppFile(m_files, app, filePath);
 				
 				int order = openFiles.indexOf(filePath);
 				if (openFiles.contains(filePath)) {
@@ -68,6 +69,6 @@ public class EditorApp extends AdminApp {
 		
 	}
 	
-	private BoaServer m_server;
+	private FileAccessor m_files;
 
 }

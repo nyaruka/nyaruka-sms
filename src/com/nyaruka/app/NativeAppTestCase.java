@@ -1,33 +1,55 @@
 package com.nyaruka.app;
 
-import java.util.ArrayList;
 import java.util.Properties;
-
-import com.nyaruka.db.DB;
-import com.nyaruka.db.dev.DevDB;
-import com.nyaruka.http.HttpRequest;
-import com.nyaruka.http.HttpResponse;
-import com.nyaruka.vm.JSEval;
-import com.nyaruka.vm.Session;
-import com.nyaruka.vm.SessionManager;
-import com.nyaruka.vm.VM;
 
 import junit.framework.TestCase;
 
+import com.nyaruka.app.AuthApp.User;
+import com.nyaruka.http.HttpRequest;
+import com.nyaruka.http.HttpResponse;
+import com.nyaruka.http.RequestParameters;
+import com.nyaruka.vm.Session;
+import com.nyaruka.vm.SessionManager;
+import com.nyaruka.vm.TestBoaServer;
+import com.nyaruka.vm.VM;
+
 public abstract class NativeAppTestCase extends TestCase {
 	
-	public void setUp(){
-		m_db = new DevDB();
-		m_vm = new VM(m_db);
-		m_vm.start(new ArrayList<JSEval>());
+	protected TestBoaServer m_server;
+	private User m_user;
+	
+	public void setUp(){		
+		m_server = new TestBoaServer();	
 		m_cookies.clear();
+		
+		// create a test user
+		AuthApp auth = new AuthApp(getVM());
+		m_user = auth.createUser("test", "user");
+
 	}
 	
+	public HttpRequest getLoggedInRequest(String path) {
+		HttpRequest request = new HttpRequest(path);
+		request.setUser(m_user);
+		return request;
+	}
+	
+	public HttpRequest getLoggedInPost(String path, RequestParameters params) {
+		HttpRequest request = new HttpRequest(path, "POST", new Properties(), params);
+		request.setUser(m_user);
+		return request;
+		
+	}
+	
+	public VM getVM() {
+		return m_server.getVM();
+	}
+
 	public HttpResponse getResponse(NativeApp app, HttpRequest request){
 		// set our cookies on the request
 		request.setCookies(m_cookies);
 		
-		Session session = m_vm.getSessions().ensureSession(request);
+		Session session = getVM().getSessions().ensureSession(request);
 		HttpResponse response = null;
 		
 		// preprocess
@@ -49,7 +71,7 @@ public abstract class NativeAppTestCase extends TestCase {
 			response = override;
 		}
 		
-		m_vm.getSessions().save(session);
+		getVM().getSessions().save(session);
 		if (session.isNew()){
 			response.setCookie(SessionManager.SESSION_KEY, session.getKey());
 		}
@@ -74,7 +96,5 @@ public abstract class NativeAppTestCase extends TestCase {
 		assertTrue(red.getDestination().contains(url));
 	}
 	
-	DB m_db;
-	VM m_vm;
 	Properties m_cookies = new Properties();
 }

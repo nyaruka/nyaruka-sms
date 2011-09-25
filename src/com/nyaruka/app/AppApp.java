@@ -1,14 +1,14 @@
 package com.nyaruka.app;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
+import com.nyaruka.util.FileUtil;
 import com.nyaruka.vm.BoaApp;
 import com.nyaruka.vm.BoaServer;
 import com.nyaruka.vm.VM;
@@ -21,7 +21,7 @@ public class AppApp extends AdminApp {
 		super(name, vm);
 	}
 	
-	public AppApp(BoaServer server, VM vm) {
+	public AppApp(VM vm, BoaServer server) {
 		super("app", vm);
 		m_server = server;
 	}
@@ -52,37 +52,45 @@ public class AppApp extends AdminApp {
 				
 				// removing an app
 				if (r.params().containsKey("remove")) {
-					m_server.removeApp(groups[0]);
+					m_server.removeApp(groups[1]);
 					return new RedirectResponse("/admin/app/");
 				}
 				
 				// adding a new file
+				String contents = "";
+					
 				if (r.params().containsKey("file_name")) {
 					
-					boolean isCode = false;						
 					String filename = r.params().getProperty("file_name");
 					
 					if (r.params().getProperty("is_code").equals("1")) {
-						isCode = true;
 						if (!filename.endsWith(".js")) {
 							filename += ".js";
 						}
+						
+						InputStream contentStream = m_server.getFiles().getInputStream("sys/app/new_file/code.js");
+						contents = FileUtil.slurpStream(contentStream);
+					
 					} else {
 						if (!filename.endsWith(".html")) {
 							filename += ".html";
-						}							
+						}
+						
+						InputStream contentStream = m_server.getFiles().getInputStream("sys/app/new_file/template.html");
+						contents = FileUtil.slurpStream(contentStream);
 					}
 					
-					m_server.createFile(app, filename, isCode);
+					m_server.getFiles().writeFile("apps/" + app.getNamespace() + "/" + filename, contents);
+					
 				}					
 			}
 
 			context.put("app", app);		
 			
-			String[] files = m_server.getFiles(app);
+			String[] files = m_server.getFiles().getFiles("apps/" + app.getNamespace());
 			List<AppFile> appFiles = new ArrayList<AppFile>();
 			for (String path : files) {
-				appFiles.add(new AppFile(m_server, app, path));
+				appFiles.add(new AppFile(m_server.getFiles(), app, path));
 			}			
 			Collections.sort(appFiles);
 			context.put("files", appFiles);				

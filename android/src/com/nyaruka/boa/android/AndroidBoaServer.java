@@ -3,6 +3,7 @@ package com.nyaruka.boa.android;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +17,7 @@ import com.nyaruka.boa.android.db.AndroidDB;
 import com.nyaruka.util.FileUtil;
 import com.nyaruka.vm.BoaApp;
 import com.nyaruka.vm.BoaServer;
+import com.nyaruka.vm.FileAccessor;
 
 /**
  * Android version of our HTTP server. 
@@ -24,43 +26,18 @@ public class AndroidBoaServer extends BoaServer {
 
 	
 	public static final String TAG = AndroidBoaServer.class.getSimpleName();
+
+	private AndroidFileAccessor m_files;
 	
 	public AndroidBoaServer(int port, Context context) throws IOException {
 		super(port, new AndroidDB(new File("/data/data/com.nyaruka.boa.android", "boa.db")));	
 		Configuration.getDefault().setBootstrap("file.locator", new AssetLocator(context.getAssets()));
-		m_assets = context.getAssets();
 		Log.d(TAG, "Loading AndroidBoaServer..");
 		
-	}
-
-	@Override
-	public List<BoaApp> getApps() {
-
-		List<BoaApp> apps = new ArrayList<BoaApp>();
-
-		try {
-			for (String appName : m_assets.list("apps")) {
-				try {
-					String main = FileUtil.slurpStream(m_assets.open("apps/" + appName + "/main.js"));
-					apps.add(new BoaApp(appName, main));
-				} catch (Exception e) {
-					log("Couldn't load main for app " + appName);
-				}
-				
-			}
-		} catch (Throwable t) {
-			log("Failed loading apps");
-			t.printStackTrace();
-		}
-		
-		return apps;
-	}
-	
-	@Override
-	public void createApp(String namespace) {
+		m_files = new AndroidFileAccessor(context.getAssets());
 		
 	}
-	
+
 	@Override
 	public void configureTemplateEngines(TemplateEngine systemTemplates, TemplateEngine appTemplates) {
 			
@@ -76,16 +53,8 @@ public class AndroidBoaServer extends BoaServer {
 		// TODO: add our own asset locator for loading templates
 	}
 
-	@Override
-	public InputStream getInputStream(String path) {
-		try {
-			return m_assets.open(path);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+	public FileAccessor getFiles() {
+		return m_files;
 	}
-	
-	/** Our applications asset manager */
-	private AssetManager m_assets;
 
 }

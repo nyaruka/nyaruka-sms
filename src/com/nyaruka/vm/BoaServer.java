@@ -4,7 +4,6 @@ import java.io.CharArrayWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,7 +20,6 @@ import com.nyaruka.app.DBApp;
 import com.nyaruka.app.EditorApp;
 import com.nyaruka.app.NativeApp;
 import com.nyaruka.app.Route;
-import com.nyaruka.app.TemplateResponse;
 import com.nyaruka.db.DB;
 import com.nyaruka.http.BoaHttpServer;
 import com.nyaruka.http.HttpRequest;
@@ -31,7 +29,12 @@ import com.nyaruka.util.FileUtil;
 
 public abstract class BoaServer {
 
-	public BoaServer(int port, DB db) {
+	public BoaServer(VM vm, FileAccessor files) {
+		m_vm = vm;
+		m_files = files;
+	}
+	
+	public BoaServer(int port, DB db, FileAccessor files) {
 		try {
 			new BoaHttpServer(port, this);
 		} catch (Throwable t) {
@@ -39,40 +42,22 @@ public abstract class BoaServer {
 		}
 		
 		m_vm = new VM(db);
+		m_files = files;
 		
 		// init our auth app
 		addNativeApp(new AuthApp(m_vm));
 		addNativeApp(new DBApp(m_vm));
-		addNativeApp(new AppApp(this, m_vm));
-		addNativeApp(new EditorApp(this, m_vm));
+		addNativeApp(new AppApp(m_vm, this));
+		addNativeApp(new EditorApp(m_vm, m_files));
 	}
 	
-	/** Define how to get the contents of a given path */
-	public abstract InputStream getInputStream(String path);
+	public FileAccessor getFiles() {
+		return m_files;
+	}
 	
-	/** Write a file out to disk */
-	public abstract OutputStream getOutputStream(String path);
-
 	/** Direct template engines how to find files on the given platform */
 	public abstract void configureTemplateEngines(TemplateEngine systemTemplates, TemplateEngine appTemplates);
 
-	/** Read the apps from whatever storage mechanism is appropriate for the server */
-	public abstract List<BoaApp> getApps();
-	
-	/** Create an app with the given namespace */
-	public abstract void createApp(String name);
-	
-	/** Remove the app with the give namespace */
-	public abstract void removeApp(String name);
-	
-	/** Get all the files for a given app */
-	public abstract String[] getFiles(BoaApp app);
-
-	/** Create a new file in the given app */
-	public abstract void createFile(BoaApp app, String fileName, boolean isCode);
-
-	
-	
 	public void start() {
 		List<JSEval> evals = new ArrayList<JSEval>();
 		evals.add(new JSEval(readFile("static/js/json2.js"), "json2.js"));
@@ -84,6 +69,52 @@ public abstract class BoaServer {
 		
 		configureTemplateEngines(m_templates, m_appTemplates);		
 		m_requestInit = new JSEval(readFile("sys/js/requestInit.js"), "requestInit.js");
+	}
+	
+	public void createApp(String namespace) {
+		
+		FileAccessor files = getFiles();
+		
+		if (files.exists("apps/" + namespace)) {
+			throw new RuntimeException("App with name '" + namespace + "' already exists.");
+		}
+
+		// create our app dir and write our rendered main js
+		files.copyDirectory("sys/app/new_app", "apps/" + namespace);
+
+		// render our main.js as a template
+		HashMap<String,Object> context = new HashMap<String,Object>();
+		context.put("name", namespace);
+		String mainJS = renderTemplate(files.getPath("sys/app/new_app/main.js"), context);
+		
+		files.writeFile("apps/" + namespace + "/main.js", mainJS);
+		
+	}
+	
+	public void removeApp(String namespace) {
+		getFiles().deleteDirectory("apps/"+namespace);
+	}
+	
+	public List<BoaApp> getApps() {
+		
+		FileAccessor files = getFiles();
+		
+		List<BoaApp> apps = new ArrayList<BoaApp>();
+		
+		String[] appDirs = files.getFiles("apps");
+		
+		for (String appDir : appDirs) {
+			
+			String main = "apps/" + appDir + "/main.js";
+			if (files.exists(main)) {
+				String contents = FileUtil.slurpStream(files.getInputStream(main));
+				apps.add(new BoaApp(appDir, contents));
+			} else {
+				log("No main.js found for " + appDir + "\n");
+			}			
+		}
+		
+		return apps;
 	}
 	
 	public void stop() {
@@ -269,7 +300,7 @@ public abstract class BoaServer {
 	 * Read the contents of the file at the given path
 	 */
 	public String readFile(String path) {
-		InputStream is = getInputStream(path);
+		InputStream is = getFiles().getInputStream(path);
 		return FileUtil.slurpStream(is);
 	}
 
@@ -312,14 +343,15 @@ public abstract class BoaServer {
 		return resp;
 	}
 
-	
 	private JSEval m_requestInit;
-	
 	private TemplateEngine m_templates = new TemplateEngine();
 	private TemplateEngine m_appTemplates = new TemplateEngine();
 	
 	/** this vm is where all the magic happens */
-	private VM m_vm;
+	protected VM m_vm;
+	
+	/** access in and out of our file system */
+	protected FileAccessor m_files;
 	
 	/** Our native apps */
 	private ArrayList<NativeApp> m_nativeApps = new ArrayList<NativeApp>();

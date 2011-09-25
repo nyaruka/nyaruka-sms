@@ -5,6 +5,7 @@ import java.io.InputStream;
 import com.nyaruka.util.FileUtil;
 import com.nyaruka.vm.BoaApp;
 import com.nyaruka.vm.BoaServer;
+import com.nyaruka.vm.FileAccessor;
 
 public class AppFile implements Comparable {
 
@@ -12,13 +13,14 @@ public class AppFile implements Comparable {
 	private int m_order;
 	
 	private String m_path;
-	private BoaServer m_server;
 	private BoaApp m_app;
 
-	public AppFile(BoaServer server, BoaApp app, String path) {
+	private FileAccessor m_files;
+	
+	public AppFile(FileAccessor files, BoaApp app, String path) {
 		m_path = path;
-		m_server = server;
 		m_app = app;
+		m_files = files;
 	}
 	
 	public boolean isTemplate() {
@@ -50,9 +52,8 @@ public class AppFile implements Comparable {
 	}
 	
 	public String getContents() {
-		// TODO: Abstract out file access from BoaServer
 		String fullPath = "apps/" + m_app.getNamespace() + "/" + m_path;
-		InputStream is = m_server.getInputStream(fullPath);
+		InputStream is = m_files.getInputStream(fullPath);
 		return FileUtil.slurpStream(is);
 	}
 	

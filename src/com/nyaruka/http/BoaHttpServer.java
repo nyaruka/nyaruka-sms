@@ -156,7 +156,7 @@ public class BoaHttpServer extends NanoHTTPD {
 		
 		InputStream is = null;
 		try{
-			is = m_boa.getInputStream(uri);
+			is = m_boa.getFiles().getInputStream(uri);
 		} catch (Throwable t){
 			return new HttpResponse(HTTP_NOTFOUND, MIME_PLAINTEXT, "Error 404, file not found.");
 		}

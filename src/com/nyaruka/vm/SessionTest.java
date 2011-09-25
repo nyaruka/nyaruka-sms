@@ -27,7 +27,7 @@ public class SessionTest extends TestCase {
 		// test the response encoding
 		HttpResponse response = new HttpResponse();
 		response.setCookie("session", "12345678901234578901234567890");
-		assertEquals("session=12345678901234578901234567890; expires=Sat, 03 May 2025 17:44:22 GMT", response.getCookieString("session"));
+		assertEquals("session=12345678901234578901234567890; Path=/; expires=Sat, 03 May 2025 17:44:22 GMT", response.getCookieString("session"));
 	}
 	
 	public void testCreation(){

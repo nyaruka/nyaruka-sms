@@ -33,7 +33,7 @@ public class AppAppTest extends NativeAppTestCase {
 	
 	public void testAddApp() {
 		
-		AppApp app = new AppApp(m_server.getVM(), m_server);
+		AppApp app = new AppApp(getVM(), m_server);
 
 		// create a new app
 		RequestParameters params = new RequestParameters();
@@ -43,7 +43,7 @@ public class AppAppTest extends NativeAppTestCase {
 		assertEquals("301 Moved Permanently", redirect.getStatus());
 
 		// tell our server to reload our apps
-		m_server.loadApps();
+		getServer().loadApps();
 		
 		// now fetch the index and see that our new app is there
 		TemplateResponse resp = (TemplateResponse) getResponse(app, new HttpRequest("/admin/app/"));

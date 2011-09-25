@@ -9,18 +9,20 @@ import com.nyaruka.app.auth.User;
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
 import com.nyaruka.http.RequestParameters;
+import com.nyaruka.vm.BoaServer;
 import com.nyaruka.vm.Session;
 import com.nyaruka.vm.SessionManager;
-import com.nyaruka.vm.TestBoaServer;
+import com.nyaruka.vm.MockBoaServer;
 import com.nyaruka.vm.VM;
+
 
 public abstract class NativeAppTestCase extends TestCase {
 	
-	protected TestBoaServer m_server;
+	protected MockBoaServer m_server;
 	private User m_user;
 	
 	public void setUp(){		
-		m_server = new TestBoaServer();	
+		m_server = new MockBoaServer();	
 		m_cookies.clear();
 		
 		// create a test user
@@ -40,6 +42,10 @@ public abstract class NativeAppTestCase extends TestCase {
 		request.setUser(m_user);
 		return request;
 		
+	}
+	
+	public BoaServer getServer() {
+		return m_server;
 	}
 	
 	public VM getVM() {

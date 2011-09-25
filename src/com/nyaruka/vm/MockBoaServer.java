@@ -7,9 +7,9 @@ import net.asfun.jangod.template.TemplateEngine;
 import com.nyaruka.db.DB;
 import com.nyaruka.db.dev.DevDB;
 
-public class TestBoaServer extends BoaServer {
+public class MockBoaServer extends BoaServer {
 
-	public TestBoaServer() {
+	public MockBoaServer() {
 		super(new VM(new DevDB()), new DevFileAccessor("/tmp/boa"));
 		
 		DB db = m_vm.getDB();

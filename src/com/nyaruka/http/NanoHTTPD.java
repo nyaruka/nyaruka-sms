@@ -207,7 +207,7 @@ public class NanoHTTPD
 		HTTP_OK = "200 OK",
 		HTTP_PARTIALCONTENT = "206 Partial Content",
 		HTTP_RANGE_NOT_SATISFIABLE = "416 Requested Range Not Satisfiable",
-		HTTP_REDIRECT = "301 Moved Permanently",
+		HTTP_REDIRECT = "302 Moved Temporarily",
 		HTTP_FORBIDDEN = "403 Forbidden",
 		HTTP_NOTFOUND = "404 Not Found",
 		HTTP_BADREQUEST = "400 Bad Request",

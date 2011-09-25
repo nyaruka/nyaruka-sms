@@ -19,7 +19,7 @@ public abstract class AuthView extends View {
 		String permission = getPermission();
 		if (permission != null){
 			if (!user.hasPermission(permission)){
-				throw new AuthException(request.url());
+				throw new AuthException(request.url(), "You do not have permission to view this page. (" + permission + ")");
 			}
 		}
 	}

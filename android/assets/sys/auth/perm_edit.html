@@ -2,30 +2,30 @@
 
 {! block content !}
 <div class="page-header">
-  <h1>Edit User</h1>
+  <h1>Edit Permission</h1>
 </div>
 
 <div class="row">
   <div class="span5 columns">
-    <h2>Users</h2>
-    <p>Users let you control access to your applications.</p>
-    <p>You should restrict users to only have the permissions they need.</p>
+    <h2>Permissions</h2>
+    <p>You can enforce fine grained control over the different parts of your app by using permissions.</p>
+    <p>Each piece of functionality can have a different permission.</p>
   </div>
 
   <div class="span6 columns">
     <form class="form-stacked" method="post">
       <fieldset>
-        <legend>{{ user.username }}</legend>
+        <legend>{{ permission.slug }}</legend>
         <div class="clearfix">
           <label for="name">Name</label>
           <div class="input">
-            <input class="xlarge" id="name" name="name" size="30" type="text" value="{{user.name}}" />
+            <input class="xlarge" id="name" name="name" size="30" type="text" value="{{permission.name}}" />
           </div>
         </div><!-- /clearfix -->
         <div class="clearfix">
-          <label for="name">Email</label>
+          <label for="name">Description</label>
           <div class="input">
-            <input class="xlarge" id="email" name="email" size="30" type="text" value="{{user.email}}" />
+            <input class="xlarge" id="description" name="description" size="30" type="text" value="{{permission.description}}" />
           </div>
         </div><!-- /clearfix -->
       </fieldset>

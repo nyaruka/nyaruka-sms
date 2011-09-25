@@ -15,11 +15,11 @@ import java.util.regex.Pattern;
 import net.asfun.jangod.template.TemplateEngine;
 
 import com.nyaruka.app.AppApp;
-import com.nyaruka.app.AuthApp;
 import com.nyaruka.app.DBApp;
 import com.nyaruka.app.EditorApp;
 import com.nyaruka.app.NativeApp;
 import com.nyaruka.app.Route;
+import com.nyaruka.app.auth.AuthApp;
 import com.nyaruka.db.DB;
 import com.nyaruka.http.BoaHttpServer;
 import com.nyaruka.http.HttpRequest;

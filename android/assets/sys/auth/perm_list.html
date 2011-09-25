@@ -1,0 +1,46 @@
+{! extends "../base.html" !}
+
+{! block content !}
+<div class="page-header">
+  <h1>Permissions</h1>
+</div>
+
+<div class="row">
+  <div class="span11 columns">
+    <table class="zebra-striped">
+      <thead>
+        <tr>
+          <th>name</th>
+          <th>slug</th>
+          <th>description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for perm in permissions %}
+        <tr class="collection_row" slug="{{ perm.slug }}">
+          <td>{{ perm.name }}</td>
+          <td>{{ perm.slug }}</td>
+          <td>{{ perm.description }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="span5 columns">
+    <h2>Permissions</h2>
+    <p>You can enforce fine grained control over the different parts of your app by using permissions.</p>
+    <p>Each piece of functionality can have a different permission.</p>
+    <a class="btn primary" href="/auth/perm/create/">Add Permission</a>
+  </div>
+</div>
+{! endblock !}
+
+{! block extrascript !}
+<script>
+  $(document).ready(function(){
+    $(".collection_row").click(function(){
+      document.location.href = "/auth/perm/edit/" + $(this).attr("slug") + "/";
+    });
+  });
+</script>
+{! endblock !}

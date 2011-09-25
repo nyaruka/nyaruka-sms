@@ -4,7 +4,8 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.nyaruka.app.AuthApp.User;
+import com.nyaruka.app.auth.AuthApp;
+import com.nyaruka.app.auth.User;
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
 import com.nyaruka.http.RequestParameters;
@@ -96,5 +97,5 @@ public abstract class NativeAppTestCase extends TestCase {
 		assertTrue(red.getDestination().contains(url));
 	}
 	
-	Properties m_cookies = new Properties();
+	protected Properties m_cookies = new Properties();
 }

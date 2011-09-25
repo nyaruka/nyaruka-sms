@@ -7,6 +7,7 @@ import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.nyaruka.app.auth.AuthView;
 import com.nyaruka.db.Collection;
 import com.nyaruka.db.Cursor;
 import com.nyaruka.db.Record;

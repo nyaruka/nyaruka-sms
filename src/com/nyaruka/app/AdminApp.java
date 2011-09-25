@@ -4,7 +4,7 @@ import com.nyaruka.vm.VM;
 
 public abstract class AdminApp extends NativeApp {
 
-	VM m_vm;
+	protected VM m_vm;
 	
 	public AdminApp(String name, VM vm){
 		super(name);
@@ -14,7 +14,7 @@ public abstract class AdminApp extends NativeApp {
 	/**
 	 * The base context for the admin view
 	 */
-	ResponseContext getAdminContext() {
+	protected ResponseContext getAdminContext() {
 		ResponseContext context = new ResponseContext();
 		context.put("collections", m_vm.getDB().getCollections());
 		context.put("apps", m_vm.getApps());

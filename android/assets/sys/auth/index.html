@@ -5,9 +5,8 @@
   <h1>Users</h1>
 </div>
 
-{% if user %}
 <div class="row">
-  <div class="span10 columns">
+  <div class="span11 columns">
     <table class="zebra-striped">
       <thead>
         <tr>
@@ -34,9 +33,6 @@
     <a class="btn primary" href="/auth/create/">Add User</a>
   </div>
 </div>
-{% else %}
-You are not logged in.
-{% endif %}
 {! endblock !}
 
 {! block extrascript !}

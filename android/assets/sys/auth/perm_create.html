@@ -1,0 +1,31 @@
+{! extends "../base.html" !}
+
+{! block content !}
+<div class="page-header">
+  <h1>Create Permission</h1>
+</div>
+
+<div class="row">
+  <div class="span5 columns">
+    <h2>Permissions</h2>
+    <p>You can enforce fine grained control over the different parts of your app by using permissions.</p>
+    <p>Each piece of functionality can have a different permission.</p>
+  </div>
+
+  <div class="span6 columns">
+    <form class="form-stacked" method="post">
+      <fieldset>
+        <legend>New Permission</legend>
+        <div class="clearfix">
+          <label for="slug">Slug</label>
+          <div class="input">
+            <input class="xlarge" id="slug" name="slug" size="30" type="text" value="{{slug}}" />
+          </div>
+        </div>
+      </fieldset>
+      <input type="submit" value="Create" class="btn primary" />
+    </form>
+  </div>
+</div>
+{! endblock !}
+

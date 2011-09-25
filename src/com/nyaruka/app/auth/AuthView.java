@@ -1,9 +1,8 @@
-package com.nyaruka.app;
+package com.nyaruka.app.auth;
 
 import com.nyaruka.http.HttpRequest;
 import com.nyaruka.http.HttpResponse;
-import com.nyaruka.app.AuthApp.AuthException;
-import com.nyaruka.app.AuthApp.User;
+import com.nyaruka.app.View;
 
 public abstract class AuthView extends View {
 	

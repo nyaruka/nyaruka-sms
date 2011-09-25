@@ -16,6 +16,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.Hashtable;
@@ -89,7 +90,7 @@ public class NanoHTTPD
 	 * @param header	Header entries, percent decoded
 	 * @return HTTP response, see class Response for details
 	 */
-	public Response serve( String uri, String method, Properties header, Properties parms, Properties files )
+	public Response serve( String uri, String method, Properties header, RequestParameters parms, Properties files )
 	{
 		System.out.println( method + " '" + uri + "' " );
 
@@ -100,12 +101,12 @@ public class NanoHTTPD
 			System.out.println( "  HDR: '" + value + "' = '" +
 								header.getProperty( value ) + "'" );
 		}
-		e = parms.propertyNames();
-		while ( e.hasMoreElements())
+		Iterator it = parms.keys().iterator();
+		while ( it.hasNext())
 		{
-			String value = (String)e.nextElement();
+			String value = (String)it.next();
 			System.out.println( "  PRM: '" + value + "' = '" +
-								parms.getProperty( value ) + "'" );
+								parms.get( value ).size() + "'" );
 		}
 		e = files.propertyNames();
 		while ( e.hasMoreElements())
@@ -341,9 +342,11 @@ public class NanoHTTPD
 				ByteArrayInputStream hbis = new ByteArrayInputStream(buf, 0, rlen);
 				BufferedReader hin = new BufferedReader( new InputStreamReader( hbis ));
 				Properties pre = new Properties();
-				Properties parms = new Properties();
 				Properties header = new Properties();
 				Properties files = new Properties();
+				
+				RequestParameters parms = new RequestParameters();
+
 
 				// Decode the header into parms and header java properties
 				decodeHeader(hin, pre, parms, header);
@@ -473,7 +476,7 @@ public class NanoHTTPD
 		 * Decodes the sent headers and loads the data into
 		 * java Properties' key - value pairs
 		**/
-		private  void decodeHeader(BufferedReader in, Properties pre, Properties parms, Properties header)
+		private  void decodeHeader(BufferedReader in, Properties pre, RequestParameters parms, Properties header)
 			throws InterruptedException
 		{
 			try {
@@ -529,7 +532,7 @@ public class NanoHTTPD
 		 * Decodes the Multipart Body data and put it
 		 * into java Properties' key - value pairs.
 		**/
-		private void decodeMultipartData(String boundary, byte[] fbuf, BufferedReader in, Properties parms, Properties files)
+		private void decodeMultipartData(String boundary, byte[] fbuf, BufferedReader in, RequestParameters parms, Properties files)
 			throws InterruptedException
 		{
 			try
@@ -727,7 +730,7 @@ public class NanoHTTPD
 		 * identical keys due to the simplicity of Properties -- if you need multiples,
 		 * you might want to replace the Properties with a Hashtable of Vectors or such.
 		 */
-		private void decodeParms( String parms, Properties p )
+		private void decodeParms( String parms, RequestParameters p )
 			throws InterruptedException
 		{
 			if ( parms == null )

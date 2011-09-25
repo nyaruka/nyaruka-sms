@@ -4,6 +4,7 @@ import java.io.CharArrayWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +15,10 @@ import java.util.regex.Pattern;
 
 import net.asfun.jangod.template.TemplateEngine;
 
+import com.nyaruka.app.AppApp;
+import com.nyaruka.app.AuthApp;
 import com.nyaruka.app.DBApp;
+import com.nyaruka.app.EditorApp;
 import com.nyaruka.app.NativeApp;
 import com.nyaruka.app.Route;
 import com.nyaruka.app.TemplateResponse;
@@ -40,10 +44,15 @@ public abstract class BoaServer {
 		// init our auth app
 		addNativeApp(new AuthApp(m_vm));
 		addNativeApp(new DBApp(m_vm));
+		addNativeApp(new AppApp(this, m_vm));
+		addNativeApp(new EditorApp(this, m_vm));
 	}
 	
-	/** Define out to get the contents of a given path */
+	/** Define how to get the contents of a given path */
 	public abstract InputStream getInputStream(String path);
+	
+	/** Write a file out to disk */
+	public abstract OutputStream getOutputStream(String path);
 
 	/** Direct template engines how to find files on the given platform */
 	public abstract void configureTemplateEngines(TemplateEngine systemTemplates, TemplateEngine appTemplates);
@@ -56,6 +65,14 @@ public abstract class BoaServer {
 	
 	/** Remove the app with the give namespace */
 	public abstract void removeApp(String name);
+	
+	/** Get all the files for a given app */
+	public abstract String[] getFiles(BoaApp app);
+
+	/** Create a new file in the given app */
+	public abstract void createFile(BoaApp app, String fileName, boolean isCode);
+
+	
 	
 	public void start() {
 		List<JSEval> evals = new ArrayList<JSEval>();
@@ -310,4 +327,5 @@ public abstract class BoaServer {
 	
 	/** And their routes */
 	private ArrayList<Route> m_nativeRoutes = new ArrayList<Route>();
+
 }

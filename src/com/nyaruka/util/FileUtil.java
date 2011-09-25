@@ -1,5 +1,6 @@
 package com.nyaruka.util;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -7,6 +8,8 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.channels.FileChannel;
 import java.util.Scanner;
 
@@ -38,6 +41,19 @@ public class FileUtil {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	
+	public static void writeStream(OutputStream outputStream, String contents) {
+		try {
+			BufferedOutputStream bos = new BufferedOutputStream(outputStream);
+			OutputStreamWriter sw = new OutputStreamWriter(bos);
+			sw.write(contents);
+			sw.close();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	
 	public static void writeFile(File file, String contents) {		
 		try {
@@ -75,4 +91,5 @@ public class FileUtil {
 			throw new RuntimeException (e);
 		}
 	}
+
 }

@@ -10,7 +10,7 @@ public abstract class AdminApp extends NativeApp {
 		super(name);
 		m_vm = vm;
 	}
-	
+
 	/**
 	 * The base context for the admin view
 	 */
@@ -20,4 +20,5 @@ public abstract class AdminApp extends NativeApp {
 		context.put("apps", m_vm.getApps());
 		return context;
 	}
+	
 }

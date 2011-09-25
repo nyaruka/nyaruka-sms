@@ -23,7 +23,7 @@ public class BoaHttpServer extends NanoHTTPD {
 		m_boa = boa;
 	}
 	
-	public synchronized Response serve(String url, String method, Properties headers, Properties params, Properties files){
+	public synchronized Response serve(String url, String method, Properties headers, RequestParameters params, Properties files){
 		m_boa.log(method + " " + url);
 		HttpRequest httpRequest = new HttpRequest(url, method, headers, params);
 		
@@ -46,7 +46,7 @@ public class BoaHttpServer extends NanoHTTPD {
 	public synchronized HttpResponse serve(HttpRequest request){
 		String url = request.url();
 		m_boa.log(request.method() + " " + url);
-		Properties params = request.params();
+		RequestParameters params = request.params();
 		String method = request.method();
 		
 		// static files don't need server stuff
@@ -63,7 +63,7 @@ public class BoaHttpServer extends NanoHTTPD {
 				if (!params.containsKey("filename")) {
 					throw new IllegalArgumentException("The editor respectfully requests a file to edit.");
 				} else {
-					File file = new File("android/assets/apps/" + (String)params.get("filename"));
+					File file = new File("android/assets/apps/" + (String)params.getProperty("filename"));
 					if (method.equals("POST")) {												
 						String contents = (String)params.getProperty("editor");
 						FileUtil.writeFile(file, contents);
@@ -75,9 +75,6 @@ public class BoaHttpServer extends NanoHTTPD {
 			}
 			else if (url.equals("/log")) {
 				response = m_boa.renderLog(request);
-			}
-			else if (url.startsWith("/admin")) {
-				response = m_boa.renderAdmin(request);
 			}
 			else {
 				// first try native apps

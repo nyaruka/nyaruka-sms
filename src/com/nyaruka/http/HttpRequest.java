@@ -18,14 +18,14 @@ public class HttpRequest {
 	public static final String GET = "GET";
 	
 	public HttpRequest(String url){
-		this(url, GET, new Properties(), new Properties());
+		this(url, GET, new Properties(), new RequestParameters());
 	}
 	
 	public HttpRequest(String url, String method){
-		this(url, method, new Properties(), new Properties());
+		this(url, method, new Properties(), new RequestParameters());
 	}	
 	
-	public HttpRequest(String url, String method, Properties headers, Properties params){
+	public HttpRequest(String url, String method, Properties headers, RequestParameters params){
 		m_url = url;
 		m_method = method;
 		m_params = params;
@@ -56,7 +56,7 @@ public class HttpRequest {
 		return m_method;
 	}
 	
-	public Properties params(){
+	public RequestParameters params(){
 		return m_params;
 	}
 	
@@ -106,7 +106,7 @@ public class HttpRequest {
 	
 	private String m_url;
 	private String m_method;
-	private Properties m_params;
+	private RequestParameters m_params;
 	private Properties m_headers;
 	private Properties m_cookies;
 	private Session m_session;

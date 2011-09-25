@@ -1,0 +1,443 @@
+{! extends "base.html" !}
+
+{! block title !}{{filename}}{! endblock !}
+  
+{! block extrastyle !}
+  <style type="text/css" media="screen">
+  	html {
+  		overflow: hidden;
+ 	}
+    body {
+      margin: 0 auto;
+	  padding: 0;
+	  overflow: hidden;
+	  background: #141414;
+    }
+  
+  	#editor_toolbar {
+  		padding:5px;
+  		margin:0px;
+  		background: #444;
+  		height:39;
+  	}
+  	
+  	#editor_toolbar h3 {
+		color: #f3f3f3;
+		
+  	}
+  	
+  	.modified {
+  		font-weight:bold;
+  		color: #ABC4F1;
+  	}
+  	
+  	.tabs {
+  		padding-top:5px;
+		padding-left:51px;
+		background: #fefefe;
+		border-bottom: 0px;
+	}
+	
+	.tabs > li.active > a {
+		background: #333;
+		color:#ccc;
+		border: 1px solid #222;
+	}
+  	
+  
+    #editor { 
+        margin: 0;
+        margin-top:4;
+        position: absolute;
+        top: 35;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        overflow: hidden;
+    }
+        
+    pre {
+    	padding: 0;
+    	border-top:0;
+    }
+    
+    .ace_gutter {
+    	padding-top:10px;
+    }
+    
+    .ace_scroller {
+    	padding-top:10px;
+    }
+  </style>
+  
+{! endblock !}
+
+{! block content !}
+
+
+  <div style="float:right;padding-right:2px;">
+   	
+   	<a href="#" class="btn primary small" id="save_button">Save</a>
+  </div>
+   
+   
+<div class="topbar" style="min-width:600">
+  <div class="topbar-inner">
+    <div class="container" style="width:100%; padding-left:30px">
+     <h3><a></a></h3>
+      <ul class="nav">	    
+        {% for file in files %}
+        	{% if file.active %}
+        		<li id="{{file.id}}_tab">
+        		<a class="activate" href="#" name="{{file.id}}">{{file}}dd</a>
+        		</li>
+        	{% endif %}
+        {% endfor %}
+            
+      </ul>
+        
+	  <ul class="secondary-nav" style="margin-right:50px">
+  		<li class="dropdown"> 
+    	<a href="#" class="dropdown-toggle">File</a> 
+    	
+    	<ul class="dropdown-menu">
+    	
+    		<li><a href="#" id="close_file">Close</a></li>
+    		
+        	{% for file in files %}
+	        	{% if file.active|not %}
+		  		<li><a class="open-file" href="#">{{file}}</a></li>    	
+	  			{% endif %}
+  			{% endfor %}
+  			
+  			{% if files %}
+  			<li class="divider"/>
+  			{% endif %}
+  			
+  			<li><a href="#" id="browser_button">Test Browser</a></li>
+    	</ul>
+  	    </li> 
+	  </ul>
+    </div>
+  </div>
+</div>
+
+<pre id=editor>
+</pre>
+
+<div id="file_contents">
+	{% for file in files %}
+		{% if file.active %}
+			<div id="{{file.id}}">{{ file.contents|escape }}</div>
+		{% endif %}
+	{% endfor %}
+</div>
+
+<form method="POST" id="open_form">
+	{% for file in files %}
+		{% if file.active %}
+			<input id="open_{{file.id}}" name="file" type="hidden" value="{{file.path}}"/>
+		{% endif %}
+	{% endfor %}
+</form>
+
+{! endblock !}
+
+{! block extrascript !}    
+<script src="/static/js/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/theme-twilight.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/mode-javascript.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/mode-html.js" type="text/javascript" charset="utf-8"></script>
+
+<script type="text/javascript">
+
+var tabs = [
+	{% for file in files %}
+	{% if file.active %}
+	{ 
+		"name" : "{{file.path}}",
+		"id" : "{{file.id}}",
+		"modified" : false,
+		"cursor" : {x:0,y:0},
+		"open" : false
+	},
+	{% endif %}
+	{% endfor %}
+];
+
+var test_browser;
+var open_file = null;
+
+function getTab(id) {
+	for (var idx in tabs) {
+		if (tabs[idx].id == id) {
+			return tabs[idx];
+		} 
+	}
+	return null;
+}
+
+function getActiveTab() {
+	if (open_file) {
+		return getTab(open_file);
+	}
+	return null;
+}
+
+function renderTabs() {
+	var renderedTabs = $(".nav").children();
+	for (var idx in tabs) {
+		renderTab(tabs[idx]);
+	}
+}
+
+function renderTab(tab) {
+	var li = $("#" + tab.id + "_tab");
+	
+	// is this tab the active tab
+	if (tab.open) {
+		li.addClass("active");
+	} else {
+		li.removeClass("active");
+	}
+	
+	// set the tab name
+	if (tab.modified) {
+		li.children("a").html("<span class='modified'>" + tab.name + " *</span>");
+	} else {
+		li.children("a").text(tab.name);
+	}
+}
+
+function saveFile() {
+	
+	var tab = getActiveTab();
+
+	$.ajax({
+  		type: 'POST',
+  		data: { 'contents' : editor.getSession().getValue(),
+  				'save_file' : tab.name 
+  		},
+  		success: function() {
+  			
+  			if (test_browser) {
+  				test_browser.location.href = test_browser.location.href;
+  			}
+  			tab.modified = false;
+  			renderTab(tab);
+  		},
+  		failure: function() { console.log("failure.");}  		
+	});
+}
+
+
+function loadFile(id) {
+
+	// if the user changed some stuff, stash the changes
+	if (changed) {
+		$("#" + open_file).text(editor.getSession().getValue());
+	}
+
+	if (open_file) {
+		var lastTab = getTab(open_file);
+		lastTab.open = false;
+		
+		var pos = editor.getCursorPosition();
+		lastTab.cursor.x = pos.column;
+		lastTab.cursor.y = pos.row;
+	}
+	
+	var currentTab = getTab(id);
+	currentTab.open = true;
+
+	var contents = $("#" + id).html();
+	$("#editor").html(contents);	
+
+	// load up our editor
+    editor = ace.edit("editor");
+	editor.setShowPrintMargin(false);
+    editor.setTheme("ace/theme/twilight");
+    editor.getSession().on('change', onChange);
+
+	if (id.indexOf("_html") > 0) {
+		var HTMLMode = require("ace/mode/html").Mode;
+	    editor.getSession().setMode(new HTMLMode());	    
+	} else {
+	    var JavaScriptMode = require("ace/mode/javascript").Mode;
+	    editor.getSession().setMode(new JavaScriptMode());
+    }
+   
+    $("#close_file").text("Close " + currentTab.name);
+    
+	open_file = id;
+    changed = false;
+
+	editor.moveCursorTo(currentTab.cursor.y, currentTab.cursor.x);
+	
+	// update our tabs
+	renderTabs();
+	
+	editor.focus();
+}
+
+function onChange() {
+	// mark our change flag
+	changed = true;
+	var tab = getTab(open_file);
+	if (!tab.modified) {
+		tab.modified = true;
+		renderTab(tab);		
+	}
+}
+
+function nextTab() {
+	var tabs = $(".nav").children();
+	
+	var nextTab = false;
+	for (var idx in tabs) {
+		var tab = $(tabs[idx]);
+		if (nextTab) {
+			var link = tab.children()[0];
+			if (link) {
+				if (link.name) {
+					loadFile(link.name);
+				} else {
+					showFirstFile();
+				}
+				return true;
+			}			
+		} else {
+			if (tab.hasClass("active")) {
+				nextTab = true;
+			}
+		}
+	}
+	
+	if (nextTab) {
+		showFirstFile();
+	}
+	
+	return true;
+}
+
+function prevTab() {
+	var tabs = $(".nav").children();
+	
+	var prevLink = null;
+	
+	for (var idx in tabs) {		
+		var tab = $(tabs[idx]);		
+		if (tab.hasClass("active")) {
+			if (prevLink != null) {
+				loadFile(prevLink.name);
+				return true;
+			} else {
+				showLastFile();
+				return true;
+			}
+		} else {
+			prevLink = tab.children()[0];
+		}
+	}
+	
+	return true;
+}
+
+    
+function showLastFile() {
+	console.log("Showing last file");
+	var children = $("#file_contents").children();
+	var lastFile = children[children.length - 1].id;
+	loadFile(lastFile);
+}
+
+function showFirstFile() {
+	console.log("Showing first file");
+	var children = $("#file_contents").children();
+	var firstFile = children[0].id;
+	loadFile(firstFile);
+}
+
+$(document).ready(function() {
+    
+    changed = false;
+    
+	// default to the first active file on load
+	showLastFile();
+		
+    var canon = require("pilot/canon");
+    
+    canon.addCommand({
+    	name: "save",
+    	description: "Save the file",
+    	params:[],
+    	exec: saveFile,
+    	bindKey: {
+    		mac: 'Command-S',
+    		win: 'Ctrl-S',
+    		sender: 'editor'    		 
+    }});
+    
+    canon.addCommand({
+    	name: "next-tab",
+    	description: "Next Tab",
+    	params:[],
+    	exec: nextTab,
+    	bindKey: {
+    		mac: 'Command-]',
+    		win: 'Ctrl-]',
+    		sender: 'editor'    		 
+    }});
+
+    canon.addCommand({
+    	name: "prev-tab",
+    	description: "Previous Tab",
+    	params:[],
+    	exec: prevTab,
+    	bindKey: {
+    		mac: 'Command-[',
+    		win: 'Ctrl-[',
+    		sender: 'editor'    		 
+    }});
+
+    
+    $("#save_button").click(function() {    	
+		saveFile();
+    });
+    
+    $("#browser_button").click(function(e) {
+    	e.preventDefault();
+    	test_browser = window.open("/{{ app.namespace }}/","test_browser")
+    	window.focus();
+    	editor.focus();
+    });
+    
+    $(".open-file").click(function() {    	
+    	var toOpen = $(this).text();    	
+    	$('<input>').attr({ type: 'hidden', name: 'file', value: toOpen }).appendTo('#open_form');    	
+    	$("#open_form").submit();
+    });
+    
+    
+    $("#close_file").click(function(e) {
+    	if (tabs.length > 1) {
+    		e.preventDefault();
+    		var tab = getActiveTab();
+			$("#open_" + tab.id).remove();
+			$("#open_form").submit();
+		} else {
+			window.close();
+		}
+		
+    });
+    
+    $(".activate").click(function(e) {    
+    	e.preventDefault();
+    	loadFile($(this).attr("name"));
+    });
+    
+    
+
+});
+</script>
+{! endblock !}

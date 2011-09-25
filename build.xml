@@ -1,4 +1,4 @@
-<project>
+<project default="test">
 
    <target name="compile">
         <mkdir dir="build"/>

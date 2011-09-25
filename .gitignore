@@ -1,8 +1,8 @@
-
+*~
+*#
+*.class
 .classpath
-
-.DS_Store
-
 .project
-
+.classpath
+.DS_Store
 boa.db

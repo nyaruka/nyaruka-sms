@@ -35,9 +35,7 @@ body {
 
 #editor_window {
     width: 950px;
-    top: auto;
-    left: auto;
-    margin: 0;
+    left: 50%;
 }
 
 #mask {

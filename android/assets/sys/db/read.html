@@ -1,6 +1,6 @@
-{% extends "db/base.html" %}
+{! extends "base.html" !}
 
-{% block actions %}
+{! block actions !}
 <ul class="secondary-nav">
   <li class="dropdown"> 
     <a href="#" class="dropdown-toggle">Actions</a> 
@@ -10,9 +10,9 @@
     </ul>
   </li> 
 </ul>
-{% endblock %}
+{! endblock !}
 
-{% block content %}
+{! block content !}
 <div class="page-header">
   <h1><a href="/db/{{ collection.name }}/">{{ collection.name }}</a> &gt; {{ record.id }}</h1>
 </div>
@@ -31,10 +31,9 @@
 <form id="delete_form" method="POST" action="/db/{{collection.name}}/{{record.id}}/delete/">
   <input type="hidden" name="id" value="{{ record.id }}"></input>
 </form>
+{! endblock !}
 
-{% endblock %}
-
-{% block extrascript %}
+{! block extrascript !}
 <script>
   $(document).ready(function(){
     $("#edit_button").click(function(event){
@@ -50,7 +49,4 @@
     });
   });
 </script>
-{% endblock %}
-
-
-
+{! endblock !}

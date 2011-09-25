@@ -9,10 +9,14 @@ public class HttpResponse {
 	private InputStream m_data = null;
 	private Properties m_headers = new Properties();
 	private Properties m_cookies = new Properties();
-	private String m_status = "200 OK";
+	private String m_status = NanoHTTPD.HTTP_OK;
 	private String m_mimeType = NanoHTTPD.MIME_HTML;
 	
 	public HttpResponse(){
+	}
+	
+	public HttpResponse(String body){
+		this(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_HTML, body);
 	}
 	
 	public HttpResponse(String status, String mimeType, InputStream data){
@@ -66,7 +70,7 @@ public class HttpResponse {
 		cookie.append(key);
 		cookie.append("=");
 		cookie.append(m_cookies.get(key));
-		cookie.append("; expires=");
+		cookie.append("; Path=/; expires=");
 		cookie.append("Sat, 03 May 2025 17:44:22 GMT");
 		return cookie.toString();
 	}

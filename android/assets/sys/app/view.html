@@ -1,14 +1,96 @@
-{! extends "../base.html" !}
+{! extends "base.html" !}
 
 {! block actions !}
 <ul class="secondary-nav">
   <li class="dropdown"> 
     <a href="#" class="dropdown-toggle">Actions</a> 
     <ul class="dropdown-menu">
+      <li><a href="#" id="add_code_button">New Javascript</a></li>
+	  <li><a href="#" id="add_template_button">New Template</a></li>
       <li><a href="#" id="remove_button">Remove App</a></li>
     </ul>
   </li> 
 </ul>
+{! endblock !}
+
+{! block content !}
+
+<div class="page-header">
+  <h1>{{ app.namespace }}</h1>
+</div>
+
+<div class="row">
+
+  <div class="span6 columns">
+	<table class="zebra-striped">
+      <thead>
+        <tr>
+          <th>Files</th>
+        </tr>
+      </thead>  
+      <tbody>
+      {% for file in files %}
+        <tr>
+          <td style="vertical-align:top" class="file_row" name="{{file}}">
+          
+          {% if file.isCode %}
+            <img style="margin-right:5;margin-top:-1px;" src="/static/img/cog.png">
+          {% else %}
+            <img style="margin-right:5;margin-top:-1px;" src="/static/img/layout.png">            
+          {% endif %}
+          
+          {{ file }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="span1 columns">&nbsp;</div>
+
+  <div class="span6 columns">
+	  <div class="sidebox">
+		  <b>Getting Started</b><br/>
+		  Your app starts with <code>main.js</code>. From there you can define what kinds of messages you will handle and the collection to store them in.
+	  </div>	  
+  </div>
+
+</div>
+
+
+
+<div class="row">
+
+  <div class="span6 columns">
+	<table class="zebra-striped">
+      <thead>
+        <tr>
+          <th>Collections</th>
+        </tr>
+      </thead>  
+      <tbody>
+      {% for coll in app_collections %}
+        <tr>
+          <td>{{ coll.name }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+	
+  <div class="span1 columns">&nbsp;</div>
+
+  <div class="span6 columns">
+	  <div class="sidebox">
+	  	<b>Quick Tip</b><br/>
+		  It's easy to add a collection to your Boa application, just add a call to <code>ensureCollection("my_coll")</code> to your app's <i>main.js</i> file.<br/><br/>
+		  
+		  You can add as many collections as you like to your application.
+	  </div>	
+  </div>
+
+</div>
+
 {! endblock !}
 
 {! block extrascript !}
@@ -17,11 +99,41 @@
   <input type="hidden" name="remove" value="{{app.namespace}}"></input>
 </form>
 
+<form id="new_file_form" method="POST">
+  <input type="hidden" id="file_name" name="file_name" value=""></input>
+  <input type="hidden" id="is_code" name="is_code" value="0"></input>
+</form>
+
 <script>
+
   $(document).ready(function(){
-  $("#remove_button").click(function(event){
-      event.preventDefault(); 
-      confirm("Remove {{app.namespace}}", "Are you sure you want to remove your app? Once you remove it, it will be gone forever.", "Remove App", function(){ 
+  
+     $(".file_row").click(function(){
+     	window.open("/admin/editor/{{app.namespace}}/?file=" + $(this).attr("name"),"_editor","resizable=yes, scrollbars=yes, titlebar=yes, width=800, height=900, top=10, left=10");
+     });
+     
+     $("#add_code_button").click(function(event){
+       event.preventDefault();       
+       promptString("New Javascript", "Enter a name for your javascript file. File names should be lower case and have no spaces or special characters. <i>e.g. handlers.js, util.js, or models.js</i>", function(value){        		
+      		$("#file_name").val(value);
+      		$("#is_code").val("1");
+	      	$("#new_file_form").submit();
+      	});
+      });
+
+     $("#add_template_button").click(function(event){
+       event.preventDefault();       
+       promptString("New Template", "Enter a name for your template. File names should be lower case and have no spaces or special characters. <i>e.g. index.html, home.html, charts.html</i>", function(value){        		
+      		$("#file_name").val(value);
+      		$("#is_code").val("0");
+	      	$("#new_file_form").submit();
+      	});
+      });
+
+
+     $("#remove_button").click(function(event){
+       event.preventDefault(); 
+       confirm("Remove {{app.namespace}}", "Are you sure you want to remove your app? Once you remove it, it will be gone forever.", "Remove App", function(){ 
       	console.log("Confirmed!");
       	$("#remove_form").submit();
       });

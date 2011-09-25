@@ -1,0 +1,183 @@
+<html>
+
+<head>
+  <title>{! block title !}{{filename}}{! endblock !}</title>
+  <link rel="stylesheet" href="/static/css/bootstrap-1.2.0.min.css" type="text/css">
+  
+
+  
+  {! block extrastyle !}
+  
+  {! endblock !} 
+</head>
+<body>
+
+
+{! block beforecontent !}
+{! endblock !}
+
+ <div id="modalDialog" class="modal" style="width:380px;display:none; position: absolute; top: 80; margin: 0 auto; z-index: 9999"> 
+	<div class="modal-header"> 
+    <h3 id="modalTitle">Modal Heading</h3> 
+    <a href="#" id="modalClose" class="close">&times;</a> 
+    </div> 
+    <div class="modal-body">          	
+  	<p id="modalDescription"></p>
+  	<input id="promptResult" class="xlarge" style="margin:0 auto;height:30px" type="text" size="30">            
+    </div> 
+    <div class="modal-footer"> 
+      <a href="#" id="modalOk" class="btn primary">Ok</a> 
+      <a href="#" id="modalCancel" class="btn secondary">Cancel</a> 
+    </div> 
+ </div> 
+        
+<div id="content">
+	{! block content !}
+	{! endblock !}
+	
+       
+	<div id="mask">
+	
+	</div>
+</div>
+
+
+{! block aftercontent !}
+{! endblock !}
+
+
+
+
+
+<script src="/static/js/jquery-1.6.2.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/json2.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/theme-twilight.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/mode-json.js" type="text/javascript" charset="utf-8"></script>
+<script src="/static/js/beautify.js" type="text/javascript" charset="utf-8"></script>
+<script>
+ $("body").bind("click", function (e) {
+  $('.dropdown-toggle, .menu').parent("li").removeClass("open");
+  });
+  $(".dropdown-toggle, .menu").click(function (e) {
+  var $li = $(this).parent("li").toggleClass('open');
+  return false;
+  });
+  
+  function mask() {
+  	$("#mask").css({width: $(window).width(), height: $(window).height(),  zindex: 9000 });
+  	$("#mask").show();  	
+  }
+  
+  function unmask() {
+  	$("#mask").hide();
+  }
+  
+  function confirm(title, description, destructiveText, handler) {  	
+  	showModal(title, description, handler, false, destructiveText);
+  }
+  
+  function promptString(title, description, handler) {
+  	showModal(title, description, handler, true, null);
+  }
+  
+  function showModal(title, description, handler, isPrompt, destructiveText) {  
+  	
+  	mask();
+
+	// set our callback for when the dialog is accepted
+  	modalHandler = handler;
+
+    var left = ($(window).width() - $("#modalDialog").width()) / 2;
+    $("#modalDialog").css({left: left});
+
+	// set up our buttons
+	var ok = $("#modalOk");
+	
+	if (destructiveText) {
+		ok.removeClass("primary");
+		ok.addClass("danger");
+		ok.text(destructiveText);
+	} else {
+		ok.removeClass("danger");
+		ok.addClass("primary");		
+		ok.text("Ok");	
+	}
+	
+	// are we prompting the user for information?
+	if (isPrompt) {  	
+  		$("#promptResult").show();
+  	} else {
+  		$("#promptResult").hide();
+  	}
+  	
+  	// set the title and description if there is one
+  	$("#modalTitle").text(title);    
+    if (description) {
+    	var desc = $("#modalDescription");
+    	desc.html(description);
+    	desc.show();
+    } else {
+		$("#modalDescription").hide();
+	}
+	
+	// show and focus the modal
+  	$("#modalDialog").show();
+  	if (isPrompt) { 
+  		$("#promptResult").focus();
+  	}
+  }
+  
+  function modalPrimary() {
+  	if (modalHandler) {
+  		var promptResult = $("#promptResult")
+  		if (promptResult.is(":visible")) {
+  			modalHandler($("#promptResult").val());
+  		} else {
+  			modalHandler();
+  		}
+  		$("#modalDialog").hide();
+  	}
+  }
+  
+  function modalSecondary() {
+    $("#modalDialog").hide();
+  	unmask();
+  }
+  
+  $(document).ready(function() {
+  	$("#modalOk").click(function() {
+  		modalPrimary();
+  	});
+  	
+  	$("#promptResult").keypress(function(e){
+  	
+  		// TODO: add class marker for doing
+  		// slug input filtering
+  		
+   		if (e.which == 13) {
+      		modalPrimary();
+      	}
+    });
+  	
+  	$("#modalCancel").click(function() {
+  		modalSecondary();
+  	});
+  	
+  	$("#modalClose").click(function() {
+		modalSecondary();
+  	});
+  	
+    
+  });
+  
+  
+</script>
+
+{! block extrascript !}
+{! endblock !}
+
+
+</body>
+
+</html>

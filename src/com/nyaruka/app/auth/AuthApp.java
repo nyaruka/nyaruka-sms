@@ -202,7 +202,7 @@ public class AuthApp extends AdminApp {
 				}
 			}
 			
-			return new TemplateResponse("auth/user_reate.html", context);
+			return new TemplateResponse("auth/user_create.html", context);
 		}
 	}
 	

@@ -1,0 +1,40 @@
+<!-- Ants in my pants -->
+
+<project default="test">
+
+   <target name="compile">
+        <mkdir dir="build"/>
+        <javac srcdir="src" destdir="build">
+
+      <classpath>
+        <pathelement path="$CLASSPATH"/>
+        <pathelement path="build"/> 
+	<pathelement path="lib/js.jar"/>
+	<pathelement path="lib/jangod-template.jar"/>
+	<pathelement path="lib/json-org.jar"/>
+	<pathelement path="lib/sqlite4java.jar"/>
+	<pathelement path="lib/junit-3.8.1.jar"/>
+      </classpath>
+	</javac>
+    </target>
+
+  <target name="test" depends="compile">
+     <junit printsummary="yes" haltonfailure="yes" showoutput="yes" >
+      <classpath>
+        <pathelement path="$CLASSPATH"/>
+        <pathelement path="build"/> 
+	<pathelement path="lib/js.jar"/>
+	<pathelement path="lib/jangod-template.jar"/>
+	<pathelement path="lib/json-org.jar"/>
+	<pathelement path="lib/sqlite4java.jar"/>
+	<pathelement path="lib/junit-3.8.1.jar"/>
+      </classpath>
+      <formatter type="brief" usefile="false" />
+      <batchtest fork="yes" todir="results/raw/"> 
+        <fileset dir="src"> 
+          <include name="**/*Test.java"/> 
+        </fileset> 
+      </batchtest> 
+    </junit>
+  </target>
+</project>
